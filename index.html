@@ -1,0 +1,1543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thali — Indian Meal Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+:root{--saffron:#E8750A;--turmeric:#F0A500;--deep:#1C0A00;--cream:#FDF6EC;--cardamom:#5C3D2E;--rose:#B5341E;--mint:#1E6B45;--sky:#1A6A8A;--violet:#6B3FA0;--border:rgba(232,117,10,0.18);--shadow:0 4px 24px rgba(28,10,0,0.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--deep);min-height:100vh;background-image:radial-gradient(ellipse at 15% 0%,rgba(240,165,0,0.07) 0%,transparent 55%),radial-gradient(ellipse at 85% 100%,rgba(232,117,10,0.07) 0%,transparent 55%)}
+
+/* HEADER */
+header{background:var(--deep);padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,0.4)}
+.logo{display:flex;align-items:baseline;gap:.5rem}
+.logo-text{font-family:'Playfair Display',serif;font-size:1.8rem;color:var(--turmeric);letter-spacing:-.02em}
+.logo-tagline{font-size:.68rem;color:rgba(255,255,255,0.38);letter-spacing:.14em;text-transform:uppercase;margin-left:.2rem}
+.hdr-btn{background:transparent;border:1px solid rgba(240,165,0,0.35);color:var(--turmeric);padding:.4rem .9rem;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;transition:all .2s}
+.hdr-btn:hover{background:var(--turmeric);color:var(--deep)}
+
+/* STEPS */
+.steps-bar{display:flex;align-items:center;background:#fff;border-bottom:1px solid var(--border);padding:0 2rem;overflow-x:auto;gap:0}
+.step{display:flex;align-items:center;gap:.45rem;padding:.85rem 1rem .85rem 0;font-size:.78rem;font-weight:500;color:rgba(28,10,0,0.28);white-space:nowrap;border-bottom:2px solid transparent;transition:all .2s}
+.step.active{color:var(--saffron);border-bottom-color:var(--saffron)}
+.step.done{color:var(--mint);cursor:pointer}
+.step-num{width:19px;height:19px;border-radius:50%;border:1.5px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:.62rem;font-weight:700;flex-shrink:0}
+.step.done .step-num{background:var(--mint);border-color:var(--mint);color:#fff}
+.step-arrow{color:rgba(232,117,10,0.18);margin-right:1rem;font-size:.8rem;flex-shrink:0}
+
+main{max-width:1300px;margin:0 auto;padding:2rem 1.5rem}
+.screen{display:none;animation:fadeUp .3s ease}
+.screen.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-family:'Playfair Display',serif;font-size:1.5rem;margin-bottom:.3rem}
+.section-sub{font-size:.86rem;color:var(--cardamom);margin-bottom:1.6rem;line-height:1.5}
+.back-btn{background:transparent;border:1.5px solid var(--border);color:var(--cardamom);padding:.42rem .9rem;border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.8rem;font-weight:500;display:flex;align-items:center;gap:.3rem;margin-bottom:1.2rem;transition:all .2s;width:fit-content}
+.back-btn:hover{border-color:var(--saffron);color:var(--saffron)}
+
+/* SMART STATE PICKER */
+.detect-btn{display:flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,var(--saffron),var(--turmeric));color:#fff;border:none;padding:.65rem 1.2rem;border-radius:10px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.86rem;font-weight:600;margin-bottom:1.2rem;transition:all .2s;box-shadow:0 3px 14px rgba(232,117,10,0.3)}
+.detect-btn:hover{transform:translateY(-1px);box-shadow:0 5px 20px rgba(232,117,10,0.4)}
+.detect-btn:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.detect-status{font-size:.76rem;color:var(--cardamom);margin-left:.5rem}
+.zone-tabs{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1rem}
+.zone-tab{padding:.38rem .85rem;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-size:.78rem;font-weight:500;background:#fff;color:var(--cardamom);transition:all .18s;font-family:'DM Sans',sans-serif}
+.zone-tab:hover{border-color:var(--turmeric);color:var(--deep)}
+.zone-tab.active{background:var(--saffron);color:#fff;border-color:var(--saffron)}
+.zone-states{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:.5rem;margin-bottom:1.2rem}
+.state-card{padding:.6rem .85rem;border:1.5px solid var(--border);border-radius:9px;cursor:pointer;font-size:.82rem;font-weight:500;background:#fff;transition:all .15s;display:flex;align-items:center;gap:.4rem;color:var(--cardamom)}
+.state-card:hover{border-color:var(--turmeric);color:var(--deep);background:rgba(240,165,0,0.03)}
+.state-card.selected{border-color:var(--saffron);background:rgba(232,117,10,0.08);color:var(--saffron);font-weight:600}
+.state-card .state-flag{font-size:1rem;flex-shrink:0}
+.popular-row{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-bottom:1.1rem;padding:.7rem 1rem;background:#fff;border:1px solid var(--border);border-radius:10px}
+.popular-label{font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cardamom);flex-shrink:0}
+.pop-chip{padding:.26rem .7rem;border:1.5px solid var(--border);border-radius:20px;cursor:pointer;font-size:.76rem;font-weight:500;background:var(--cream);color:var(--cardamom);transition:all .15s}
+.pop-chip:hover{border-color:var(--saffron);color:var(--saffron)}
+
+/* STATE - legacy grid kept for zone-states reuse */
+.state-grid::-webkit-scrollbar{width:3px}
+.state-grid::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* CLUSTER */
+.cluster-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:.8rem;margin-bottom:1.6rem}
+.cluster-card{border:1.5px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;background:#fff;transition:all .2s;position:relative;overflow:hidden}
+.cluster-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gradient,var(--saffron))}
+.cluster-card:hover{border-color:var(--turmeric);box-shadow:var(--shadow)}
+.cluster-card.selected{border-color:var(--saffron);box-shadow:0 0 0 3px rgba(232,117,10,0.1)}
+.cluster-icon{font-size:1.5rem;margin-bottom:.45rem}
+.cluster-name{font-weight:600;font-size:.88rem;margin-bottom:.2rem}
+.cluster-states{font-size:.7rem;color:var(--cardamom);line-height:1.4}
+
+/* HOUSEHOLD PANEL */
+.panel{background:#fff;border-radius:12px;padding:1.2rem;border:1px solid var(--border);margin-bottom:1.1rem}
+.panel-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem}
+.panel-title{font-family:'Playfair Display',serif;font-size:1.05rem;display:flex;align-items:center;gap:.4rem}
+.add-btn{background:var(--saffron);color:#fff;border:none;padding:.35rem .85rem;border-radius:6px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.78rem;font-weight:500;transition:all .2s}
+.add-btn:hover{background:var(--rose)}
+
+/* PERSONS */
+.person-row{display:grid;grid-template-columns:110px 1fr 130px 100px auto;gap:.5rem;margin-bottom:.55rem;align-items:center}
+.fi{padding:.58rem .85rem;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.84rem;background:var(--cream);outline:none;transition:border .2s;width:100%}
+.fi:focus{border-color:var(--saffron);background:#fff}
+.fi-date{padding:.55rem .7rem}
+.remove-btn{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--cardamom);font-size:.85rem;transition:all .2s;flex-shrink:0}
+.remove-btn:hover{border-color:var(--rose);color:var(--rose)}
+.col-label{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--cardamom);padding-bottom:.3rem}
+.person-col-headers{display:grid;grid-template-columns:110px 1fr 130px 100px 28px;gap:.5rem;margin-bottom:.3rem}
+
+/* PETS */
+.pet-row{display:grid;grid-template-columns:100px 120px 1fr auto;gap:.5rem;margin-bottom:.55rem;align-items:center}
+.pet-col-headers{display:grid;grid-template-columns:100px 120px 1fr 28px;gap:.5rem;margin-bottom:.3rem}
+.pet-type-select{padding:.55rem .7rem;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;background:var(--cream);outline:none;transition:border .2s;width:100%;cursor:pointer}
+.pet-type-select:focus{border-color:var(--saffron);background:#fff}
+
+/* BIRTHDAY PREVIEW */
+.birthday-notice{display:inline-flex;align-items:center;gap:.3rem;background:rgba(107,63,160,0.08);border:1px solid rgba(107,63,160,0.2);color:var(--violet);font-size:.72rem;font-weight:500;padding:.18rem .6rem;border-radius:20px;margin-left:.4rem}
+
+/* META */
+.meta-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.9rem;margin-bottom:1.3rem}
+.field-group{display:flex;flex-direction:column;gap:.3rem}
+.field-label{font-size:.73rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cardamom)}
+.field-select,.field-input{padding:.68rem .85rem;border:1.5px solid var(--border);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.86rem;background:#fff;color:var(--deep);outline:none;cursor:pointer;transition:border .2s}
+.field-select:focus,.field-input:focus{border-color:var(--saffron)}
+
+/* OPTIONS GRID */
+.options-title{font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--cardamom);margin-bottom:.7rem}
+.options-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.7rem;margin-bottom:1.6rem}
+.opt-card{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:.85rem;display:flex;align-items:flex-start;gap:.65rem;cursor:pointer;transition:all .18s}
+.opt-card:hover{border-color:var(--turmeric)}
+.opt-card.active{border-color:var(--saffron);background:rgba(232,117,10,0.03)}
+.opt-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:.6rem;transition:all .2s}
+.opt-card.active .opt-check{background:var(--saffron);border-color:var(--saffron);color:#fff}
+.opt-title{font-size:.83rem;font-weight:600;margin-bottom:.1rem}
+.opt-desc{font-size:.7rem;color:var(--cardamom);line-height:1.4}
+
+/* DIET TYPE */
+.diet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.55rem;margin-bottom:1.4rem}
+.diet-chip{padding:.6rem .8rem;border:1.5px solid var(--border);border-radius:9px;cursor:pointer;font-size:.8rem;font-weight:500;background:#fff;transition:all .18s;text-align:center;color:var(--cardamom);display:flex;flex-direction:column;align-items:center;gap:.2rem}
+.diet-chip:hover{border-color:var(--turmeric)}
+.diet-chip.selected{border-color:var(--saffron);background:rgba(232,117,10,0.08);color:var(--saffron);font-weight:600}
+.diet-chip .diet-icon{font-size:1.3rem}
+.diet-chip .diet-label{font-size:.75rem}
+.diet-chip .diet-desc{font-size:.62rem;color:var(--cardamom);line-height:1.3;margin-top:.1rem}
+.diet-chip.selected .diet-desc{color:rgba(232,117,10,0.7)}
+
+/* LANGUAGE TOGGLE */
+.lang-bar{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.85rem;background:#fff;border:1px solid var(--border);border-radius:10px;padding:.72rem 1rem}
+.lang-bar-label{font-size:.8rem;font-weight:500;color:var(--cardamom)}
+.lang-chip{padding:.28rem .72rem;border:1.5px solid var(--border);border-radius:20px;font-size:.76rem;cursor:pointer;font-family:'DM Sans',sans-serif;background:#fff;color:var(--cardamom);transition:all .18s}
+.lang-chip.active{background:var(--saffron);color:#fff;border-color:var(--saffron)}
+
+/* EAT OUT FREQUENCY */
+.eatout-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:1.4rem;background:#fff;border:1px solid var(--border);border-radius:10px;padding:.85rem 1rem}
+.eatout-label{font-size:.82rem;font-weight:500;color:var(--cardamom);margin-right:.3rem}
+.freq-btn{padding:.35rem .8rem;border:1.5px solid var(--border);border-radius:6px;font-size:.78rem;cursor:pointer;font-family:'DM Sans',sans-serif;background:#fff;color:var(--cardamom);transition:all .18s}
+.freq-btn.active{background:var(--saffron);color:#fff;border-color:var(--saffron)}
+.eatout-pref{padding:.48rem .75rem;border:1.5px solid var(--border);border-radius:7px;font-family:'DM Sans',sans-serif;font-size:.82rem;background:var(--cream);outline:none;transition:border .2s;margin-left:.3rem}
+.eatout-pref:focus{border-color:var(--saffron)}
+
+.generate-btn{width:100%;padding:.95rem;background:linear-gradient(135deg,var(--saffron),var(--turmeric));color:#fff;border:none;border-radius:11px;font-family:'DM Sans',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;letter-spacing:.02em;transition:all .2s;box-shadow:0 4px 18px rgba(232,117,10,0.28)}
+.generate-btn:hover{transform:translateY(-1px);box-shadow:0 6px 26px rgba(232,117,10,0.38)}
+.generate-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* PLAN LAYOUT */
+.plan-layout{display:grid;grid-template-columns:1fr 340px;gap:1.6rem;align-items:start}
+.plan-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;flex-wrap:wrap;gap:.6rem}
+.toolbar-left{display:flex;align-items:center;gap:.7rem;flex-wrap:wrap}
+.view-toggle{display:flex;background:#fff;border:1.5px solid var(--border);border-radius:9px;overflow:hidden}
+.view-btn{padding:.4rem .88rem;font-size:.78rem;font-weight:500;cursor:pointer;background:transparent;border:none;color:var(--cardamom);transition:all .18s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:.28rem}
+.view-btn.active{background:var(--saffron);color:#fff}
+.view-label{font-family:'Playfair Display',serif;font-size:1.2rem}
+.nav-btn{padding:.4rem .9rem;border:1.5px solid var(--border);border-radius:7px;background:#fff;cursor:pointer;font-size:.78rem;font-weight:500;color:var(--cardamom);transition:all .18s;font-family:'DM Sans',sans-serif}
+.nav-btn:hover:not(:disabled){border-color:var(--saffron);color:var(--saffron)}
+.nav-btn:disabled{opacity:.28;cursor:default}
+
+/* DAY CARDS */
+.day-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:.75rem;box-shadow:0 2px 8px rgba(28,10,0,0.04);transition:box-shadow .2s}
+.day-card:hover{box-shadow:0 4px 16px rgba(28,10,0,0.08)}
+.day-card.birthday-day{border-color:rgba(107,63,160,0.35);box-shadow:0 0 0 2px rgba(107,63,160,0.08)}
+.day-card.eatout-day{border-color:rgba(26,106,138,0.35)}
+.day-header{background:var(--deep);padding:.58rem 1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.35rem}
+.day-name{color:var(--turmeric);font-family:'Playfair Display',serif;font-size:.94rem;font-weight:600}
+.day-meta{display:flex;gap:.35rem;align-items:center;flex-wrap:wrap}
+.day-date{color:rgba(255,255,255,0.38);font-size:.7rem}
+.tag{font-size:.64rem;font-weight:600;padding:.12rem .42rem;border-radius:20px}
+.tag.festival{background:rgba(240,165,0,0.2);color:var(--turmeric)}
+.tag.fasting{background:rgba(30,107,69,0.25);color:#6DE89A}
+.tag.birthday{background:rgba(107,63,160,0.3);color:#C9A0F0}
+.tag.eatout{background:rgba(26,106,138,0.25);color:#7DD3F0}
+.tag.order{background:rgba(181,52,30,0.25);color:#F0A090}
+
+/* MEALS GRID */
+.meals-grid{display:grid}
+.meal-cell{padding:.75rem .88rem;border-right:1px solid var(--border);position:relative}
+.meal-cell:last-child{border-right:none}
+.meal-type{font-size:.6rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--cardamom);margin-bottom:.3rem;display:flex;align-items:center;gap:.22rem}
+.meal-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.meal-dot.breakfast{background:var(--turmeric)}
+.meal-dot.lunch{background:var(--saffron)}
+.meal-dot.snack{background:var(--sky)}
+.meal-dot.dinner{background:var(--rose)}
+.meal-dot.eatout{background:var(--sky)}
+.meal-main{font-size:.82rem;font-weight:600;line-height:1.28;margin-bottom:.2rem}
+.meal-side{font-size:.69rem;color:var(--cardamom);line-height:1.3}
+.eatout-cell{background:rgba(26,106,138,0.04)}
+.eatout-badge{display:inline-flex;align-items:center;gap:.25rem;font-size:.7rem;color:var(--sky);font-weight:600;margin-bottom:.2rem}
+.swap-btn{position:absolute;top:.42rem;right:.42rem;width:18px;height:18px;border-radius:50%;background:rgba(232,117,10,0.08);border:1px solid var(--border);cursor:pointer;font-size:.6rem;display:flex;align-items:center;justify-content:center;transition:all .2s;opacity:0;color:var(--cardamom)}
+.meal-cell:hover .swap-btn{opacity:1}
+.swap-btn:hover{background:var(--saffron);color:#fff;border-color:var(--saffron)}
+.person-variants{padding:.42rem .95rem;background:rgba(240,165,0,0.04);border-top:1px dashed var(--border)}
+.person-variant{font-size:.7rem;color:var(--cardamom);padding:.1rem 0;display:flex;gap:.32rem}
+.person-tag{font-weight:600;color:var(--saffron)}
+.nutrition-row{padding:.42rem .95rem;background:rgba(30,107,69,0.025);border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:.32rem;align-items:center}
+.nutri-badge{font-size:.62rem;padding:.14rem .5rem;border-radius:20px;font-weight:500}
+.nutri-badge.protein{background:rgba(181,52,30,0.09);color:var(--rose)}
+.nutri-badge.greens{background:rgba(30,107,69,0.09);color:var(--mint)}
+.nutri-badge.grain{background:rgba(240,165,0,0.11);color:#8B6000}
+.nutri-badge.dairy{background:rgba(92,61,46,0.07);color:var(--cardamom)}
+.hydration-badge{font-size:.62rem;padding:.14rem .5rem;border-radius:20px;background:rgba(26,106,138,0.1);color:var(--sky);font-weight:500}
+
+/* PET STRIP */
+.pet-strip{padding:.42rem .95rem;background:rgba(107,63,160,0.04);border-top:1px dashed rgba(107,63,160,0.15);display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}
+.pet-meal-badge{font-size:.68rem;padding:.14rem .52rem;border-radius:20px;background:rgba(107,63,160,0.1);color:var(--violet);font-weight:500;display:flex;align-items:center;gap:.25rem}
+
+/* BIRTHDAY STRIP */
+.birthday-strip{padding:.42rem .95rem;background:rgba(107,63,160,0.06);border-top:1px solid rgba(107,63,160,0.15);display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.bday-text{font-size:.76rem;color:var(--violet);font-weight:600}
+.bday-suggestion{font-size:.72rem;color:var(--cardamom)}
+
+/* MONTH VIEW */
+.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.3rem;margin-bottom:.5rem}
+.month-day-hdr{text-align:center;font-size:.66rem;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--cardamom);padding:.32rem 0}
+.month-cell{background:#fff;border:1px solid var(--border);border-radius:7px;padding:.42rem;min-height:82px;cursor:pointer;transition:all .15s;position:relative;overflow:hidden}
+.month-cell:hover{border-color:var(--saffron);box-shadow:0 2px 8px rgba(232,117,10,0.1)}
+.month-cell.empty{background:transparent;border-color:transparent;cursor:default}
+.month-cell.bday-cell{border-color:rgba(107,63,160,0.3)}
+.month-cell.eatout-cell-m{border-color:rgba(26,106,138,0.3)}
+.month-num{font-size:.74rem;font-weight:700;color:var(--cardamom);margin-bottom:.25rem;display:flex;align-items:center;justify-content:space-between}
+.month-dots{display:flex;gap:.2rem;align-items:center}
+.mdot{width:5px;height:5px;border-radius:50%}
+.mdot.fest{background:var(--turmeric)}
+.mdot.bday{background:var(--violet)}
+.mdot.eatout{background:var(--sky)}
+.mdot.fast{background:var(--mint)}
+.month-meal-mini{font-size:.59rem;line-height:1.3;color:var(--deep)}
+.month-meal-mini .mb{color:var(--cardamom)}
+.month-fasting-bar{position:absolute;bottom:0;left:0;right:0;height:2.5px;background:var(--mint)}
+.month-bday-bar{position:absolute;bottom:0;left:0;right:0;height:2.5px;background:var(--violet)}
+
+/* BUDGET PANEL */
+.budget-panel{background:linear-gradient(135deg,rgba(28,10,0,0.96),rgba(92,61,46,0.92));border-radius:12px;padding:1rem 1.1rem;margin-bottom:1rem;color:#fff;position:relative;overflow:hidden}
+.budget-panel::before{content:'₹';position:absolute;right:.8rem;top:50%;transform:translateY(-50%);font-size:4rem;font-family:'Playfair Display',serif;color:rgba(240,165,0,0.08);font-weight:700;pointer-events:none}
+.budget-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem}
+.budget-title{font-family:'Playfair Display',serif;font-size:.88rem;color:var(--turmeric)}
+.budget-tier-row{display:flex;gap:.3rem;margin-bottom:.65rem}
+.budget-tier{padding:.22rem .6rem;border-radius:20px;font-size:.67rem;font-weight:600;cursor:pointer;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.55);background:transparent;font-family:'DM Sans',sans-serif;transition:all .18s}
+.budget-tier.active{background:var(--turmeric);color:var(--deep);border-color:var(--turmeric)}
+.budget-totals{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.55rem}
+.budget-item{background:rgba(255,255,255,0.07);border-radius:8px;padding:.5rem .7rem}
+.budget-item-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.45);margin-bottom:.18rem}
+.budget-item-val{font-size:1.1rem;font-weight:700;color:var(--turmeric);font-family:'Playfair Display',serif}
+.budget-item-sub{font-size:.58rem;color:rgba(255,255,255,0.35);margin-top:.05rem}
+.budget-bar-row{display:flex;gap:.35rem;align-items:center;margin-bottom:.12rem}
+.budget-bar-label{font-size:.62rem;color:rgba(255,255,255,0.5);width:52px;flex-shrink:0}
+.budget-bar-track{flex:1;height:5px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.budget-bar-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.budget-bar-amt{font-size:.62rem;color:rgba(255,255,255,0.55);width:42px;text-align:right;flex-shrink:0}
+.budget-savings{font-size:.65rem;color:rgba(30,107,69,0.9);background:rgba(30,107,69,0.15);border-radius:5px;padding:.22rem .5rem;text-align:center;margin-top:.4rem}
+
+/* SEASON BANNER */
+.season-banner{border-radius:10px;padding:.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.6rem;font-size:.8rem;font-weight:500}
+.season-banner.summer{background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.25);color:#8B6000}
+.season-banner.monsoon{background:rgba(26,106,138,0.09);border:1px solid rgba(26,106,138,0.2);color:var(--sky)}
+.season-banner.winter{background:rgba(107,63,160,0.08);border:1px solid rgba(107,63,160,0.18);color:var(--violet)}
+.season-banner.spring{background:rgba(30,107,69,0.08);border:1px solid rgba(30,107,69,0.2);color:var(--mint)}
+
+/* NUTRITION SUMMARY */
+.nutri-summary{background:#fff;border:1px solid var(--border);border-radius:12px;padding:.9rem;margin-bottom:.8rem}
+.nutri-summary-title{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--cardamom);margin-bottom:.65rem}
+.nutri-bars{display:flex;flex-direction:column;gap:.42rem}
+.nutri-bar-row{display:flex;align-items:center;gap:.5rem}
+.nutri-bar-lbl{font-size:.68rem;color:var(--cardamom);width:52px;flex-shrink:0}
+.nutri-bar-track{flex:1;height:7px;background:rgba(232,117,10,0.08);border-radius:4px;overflow:hidden}
+.nutri-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.nutri-bar-pct{font-size:.62rem;color:var(--cardamom);width:28px;text-align:right;flex-shrink:0}
+
+/* PREP TIME */
+.prep-badge{display:inline-flex;align-items:center;gap:.18rem;font-size:.58rem;font-weight:600;padding:.1rem .38rem;border-radius:10px;margin-top:.22rem}
+.prep-badge.quick{background:rgba(30,107,69,0.1);color:var(--mint)}
+.prep-badge.medium{background:rgba(240,165,0,0.12);color:#8B6000}
+.prep-badge.slow{background:rgba(181,52,30,0.1);color:var(--rose)}
+
+/* REPEAT WARNING */
+.repeat-warn{font-size:.59rem;color:var(--rose);background:rgba(181,52,30,0.07);border-radius:4px;padding:.08rem .3rem;margin-top:.15rem;display:inline-block}
+
+/* GROCERY */
+.grocery-panel{background:#fff;border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);position:sticky;top:4.2rem}
+.grocery-header{background:var(--deep);padding:.82rem 1.15rem;display:flex;align-items:center;justify-content:space-between}
+.grocery-header h3{color:var(--turmeric);font-family:'Playfair Display',serif;font-size:.95rem}
+.grocery-scope-badge{background:rgba(240,165,0,0.15);color:var(--turmeric);font-size:.65rem;font-weight:600;padding:.12rem .45rem;border-radius:20px}
+.grocery-tabs{display:flex;border-bottom:1px solid var(--border)}
+.gtab{flex:1;padding:.52rem;font-size:.75rem;font-weight:500;cursor:pointer;text-align:center;color:var(--cardamom);background:#fff;border:none;font-family:'DM Sans',sans-serif;transition:all .18s}
+.gtab.active{color:var(--saffron);border-bottom:2px solid var(--saffron)}
+.grocery-body{padding:.9rem;max-height:370px;overflow-y:auto}
+.grocery-body::-webkit-scrollbar{width:3px}
+.grocery-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.grocery-cat{margin-bottom:.85rem}
+.grocery-cat-name{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--cardamom);margin-bottom:.35rem;padding-bottom:.2rem;border-bottom:1px solid var(--border)}
+.grocery-item{display:flex;align-items:center;gap:.42rem;padding:.18rem 0;font-size:.78rem;border-bottom:1px dashed rgba(232,117,10,0.07);cursor:pointer;transition:opacity .2s}
+.grocery-item:last-child{border-bottom:none}
+.grocery-item.checked{opacity:.38;text-decoration:line-through}
+.grocery-checkbox{width:13px;height:13px;border-radius:3px;border:1.5px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.56rem;transition:all .18s}
+.grocery-item.checked .grocery-checkbox{background:var(--mint);border-color:var(--mint);color:#fff}
+.grocery-item-name{flex:1}
+.grocery-qty{font-size:.68rem;color:var(--cardamom);font-weight:500;white-space:nowrap}
+.grocery-tip-box{background:rgba(240,165,0,0.07);border-left:3px solid var(--turmeric);padding:.52rem .75rem;margin:.65rem .9rem 0;border-radius:0 6px 6px 0}
+.grocery-tip-title{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--saffron);margin-bottom:.16rem}
+.grocery-tip-text{font-size:.73rem;color:var(--cardamom);line-height:1.45}
+.grocery-actions{padding:.65rem .9rem .9rem;display:flex;flex-direction:column;gap:.4rem}
+.grocery-btn{width:100%;padding:.58rem;background:transparent;border:1.5px solid var(--saffron);color:var(--saffron);border-radius:7px;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:.76rem;font-weight:600;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:.28rem}
+.grocery-btn:hover{background:rgba(232,117,10,0.05)}
+.grocery-btn.wa{border-color:#25D366;color:#25D366}
+.grocery-btn.wa:hover{background:rgba(37,211,102,0.05)}
+.grocery-btn.dark{background:var(--deep);color:var(--turmeric);border-color:var(--deep)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(28,10,0,0.55);z-index:200;display:flex;align-items:center;justify-content:center;padding:1rem;opacity:0;pointer-events:none;transition:opacity .22s;backdrop-filter:blur(3px)}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:#fff;border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);animation:modalIn .22s ease}
+@keyframes modalIn{from{transform:scale(.96);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-header{background:var(--deep);padding:.95rem 1.25rem;border-radius:16px 16px 0 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1}
+.modal-title{color:var(--turmeric);font-family:'Playfair Display',serif;font-size:1.02rem}
+.modal-close{background:transparent;border:none;color:rgba(255,255,255,0.45);font-size:1.25rem;cursor:pointer;line-height:1;transition:color .2s;padding:.18rem}
+.modal-close:hover{color:#fff}
+.modal-body{padding:1.1rem}
+.modal-meal-sec{margin-bottom:.95rem;padding-bottom:.95rem;border-bottom:1px solid var(--border)}
+.modal-meal-sec:last-of-type{border-bottom:none}
+.modal-meal-type{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--cardamom);margin-bottom:.35rem;display:flex;align-items:center;gap:.32rem}
+.modal-meal-name{font-size:1.02rem;font-weight:700;font-family:'Playfair Display',serif;margin-bottom:.16rem}
+.modal-meal-side{font-size:.8rem;color:var(--cardamom)}
+.swap-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:.32rem;margin-top:.55rem}
+.swap-opt{padding:.38rem .6rem;border:1.5px solid var(--border);border-radius:6px;font-size:.74rem;cursor:pointer;transition:all .15s;background:#fff;font-family:'DM Sans',sans-serif}
+.swap-opt:hover{border-color:var(--saffron);color:var(--saffron)}
+.show-swap{font-size:.71rem;color:var(--saffron);background:transparent;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:.32rem;text-decoration:underline}
+
+/* RECIPE SECTION */
+.recipe-toggle{display:flex;align-items:center;gap:.35rem;font-size:.74rem;color:var(--mint);background:rgba(30,107,69,0.07);border:1px solid rgba(30,107,69,0.18);border-radius:7px;padding:.32rem .72rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;margin-top:.55rem;transition:all .18s;width:100%;justify-content:center}
+.recipe-toggle:hover{background:rgba(30,107,69,0.13)}
+.recipe-toggle.open{background:rgba(30,107,69,0.12);border-color:rgba(30,107,69,0.3)}
+.recipe-box{display:none;margin-top:.55rem;background:rgba(30,107,69,0.035);border:1px solid rgba(30,107,69,0.14);border-radius:9px;overflow:hidden;animation:fadeUp .2s ease}
+.recipe-box.open{display:block}
+.recipe-section-hdr{font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:.5rem .85rem .25rem;color:var(--mint)}
+.recipe-ingredients{padding:0 .85rem .5rem;display:flex;flex-direction:column;gap:.2rem}
+.recipe-ing{font-size:.77rem;color:var(--deep);display:flex;align-items:baseline;gap:.4rem;padding:.12rem 0;border-bottom:1px dashed rgba(30,107,69,0.1)}
+.recipe-ing:last-child{border-bottom:none}
+.recipe-ing-amt{font-size:.69rem;color:var(--cardamom);min-width:64px;flex-shrink:0;font-weight:500}
+.recipe-steps{padding:0 .85rem .7rem;counter-reset:step}
+.recipe-step{font-size:.77rem;color:var(--deep);padding:.45rem 0 .45rem 1.9rem;border-bottom:1px dashed rgba(30,107,69,0.08);position:relative;line-height:1.45;counter-increment:step}
+.recipe-step:last-child{border-bottom:none}
+.recipe-step::before{content:counter(step);position:absolute;left:0;top:.42rem;width:1.3rem;height:1.3rem;background:var(--mint);color:#fff;border-radius:50%;font-size:.6rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.recipe-tip{font-size:.71rem;color:var(--saffron);background:rgba(232,117,10,0.06);padding:.4rem .85rem;border-top:1px solid rgba(232,117,10,0.1);font-style:italic}
+.recipe-no-data{font-size:.76rem;color:var(--cardamom);padding:.6rem .85rem;text-align:center}
+
+/* BADGES */
+.badge-row{display:flex;align-items:center;gap:.42rem;flex-wrap:wrap;margin-bottom:.9rem}
+.info-badge{padding:.26rem .65rem;border-radius:20px;font-size:.71rem;font-weight:500;background:rgba(232,117,10,0.1);color:var(--saffron);border:1px solid rgba(232,117,10,0.18)}
+.info-badge.green{background:rgba(30,107,69,0.08);color:var(--mint);border-color:rgba(30,107,69,0.18)}
+.info-badge.violet{background:rgba(107,63,160,0.08);color:var(--violet);border-color:rgba(107,63,160,0.18)}
+.info-badge.blue{background:rgba(26,106,138,0.08);color:var(--sky);border-color:rgba(26,106,138,0.18)}
+
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:.38rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:1.6rem;right:1.6rem;background:var(--deep);color:#fff;padding:.65rem 1.1rem;border-radius:9px;font-size:.8rem;box-shadow:0 8px 24px rgba(0,0,0,0.3);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+
+/* LEGEND */
+.legend{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;font-size:.72rem;color:var(--cardamom)}
+.legend-item{display:flex;align-items:center;gap:.28rem}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+
+@media print{header,.steps-bar,.view-toggle,.week-nav-btns,.back-btn,.hdr-btn,.swap-btn,.grocery-actions,.grocery-tip-box,.show-swap,.swap-opts,.modal-overlay,.budget-panel,.season-banner,.nutri-summary,.lang-bar{display:none!important}body{background:white}.plan-layout{display:grid;grid-template-columns:1fr 230px;gap:.7rem}.grocery-panel{position:static;box-shadow:none}.grocery-body{max-height:none}.day-card{break-inside:avoid;box-shadow:none;margin-bottom:.45rem}main{padding:.4rem}}
+@media(max-width:1060px){.plan-layout{grid-template-columns:1fr}.grocery-panel{position:static}.budget-panel{position:static}}
+@media(max-width:760px){.person-row,.person-col-headers{grid-template-columns:1fr 1fr}.pet-row,.pet-col-headers{grid-template-columns:1fr 1fr}.options-grid{grid-template-columns:1fr 1fr}.meta-row{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.options-grid{grid-template-columns:1fr}.meta-row{grid-template-columns:1fr}.person-row,.person-col-headers{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-text">Thali</span>
+    <span class="logo-tagline">Indian Meal Planner</span>
+  </div>
+  <button class="hdr-btn" onclick="window.print()">🖨️ Print / PDF</button>
+</header>
+
+<div class="steps-bar">
+  <div class="step active" id="step1" onclick="jumpStep(1)"><span class="step-num">1</span> State</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step2" onclick="jumpStep(2)"><span class="step-num">2</span> Cuisine</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step3" onclick="jumpStep(3)"><span class="step-num">3</span> Household</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step4" onclick="jumpStep(4)"><span class="step-num">4</span> Preferences</div>
+  <span class="step-arrow">›</span>
+  <div class="step" id="step5" onclick="jumpStep(5)"><span class="step-num">5</span> Meal Plan</div>
+</div>
+
+<main>
+
+<!-- S1: STATE -->
+<div class="screen active" id="screen-state">
+  <h2 class="section-title">Where are you cooking from?</h2>
+  <p class="section-sub">Tap your state to get an authentic regional meal plan — or let us detect your location.</p>
+
+  <!-- DETECT LOCATION -->
+  <div style="display:flex;align-items:center;gap:.8rem;margin-bottom:1.2rem;flex-wrap:wrap">
+    <button class="detect-btn" id="detect-btn" onclick="detectLocation()">📍 Detect My Location</button>
+    <span class="detect-status" id="detect-status"></span>
+  </div>
+
+  <!-- QUICK PICKS -->
+  <div class="popular-row">
+    <span class="popular-label">🔥 Popular</span>
+    <span class="pop-chip" onclick="selectState('Tamil Nadu')">🌴 Tamil Nadu</span>
+    <span class="pop-chip" onclick="selectState('Maharashtra')">🏙️ Maharashtra</span>
+    <span class="pop-chip" onclick="selectState('Punjab')">🌾 Punjab</span>
+    <span class="pop-chip" onclick="selectState('Kerala')">🥥 Kerala</span>
+    <span class="pop-chip" onclick="selectState('West Bengal')">🐟 West Bengal</span>
+    <span class="pop-chip" onclick="selectState('Gujarat')">🫙 Gujarat</span>
+    <span class="pop-chip" onclick="selectState('Rajasthan')">🏜️ Rajasthan</span>
+    <span class="pop-chip" onclick="selectState('Delhi')">🏛️ Delhi</span>
+  </div>
+
+  <!-- ZONE TABS -->
+  <div class="zone-tabs" id="zone-tabs">
+    <button class="zone-tab active" onclick="filterZone('all',this)">🗺️ All States</button>
+    <button class="zone-tab" onclick="filterZone('south',this)">🥥 South</button>
+    <button class="zone-tab" onclick="filterZone('west',this)">🐟 West</button>
+    <button class="zone-tab" onclick="filterZone('north',this)">🫓 North</button>
+    <button class="zone-tab" onclick="filterZone('east',this)">🌿 East</button>
+    <button class="zone-tab" onclick="filterZone('central',this)">🫙 Central</button>
+    <button class="zone-tab" onclick="filterZone('himalayan',this)">🏔️ Himalayan</button>
+  </div>
+
+  <div class="zone-states" id="state-grid"></div>
+  <button class="generate-btn" id="state-next-btn" onclick="goToCluster()" disabled>Continue → Refine Cuisine</button>
+</div>
+
+<!-- S2: CLUSTER -->
+<div class="screen" id="screen-cluster">
+  <button class="back-btn" onclick="showScreen('screen-state',1)">← Back</button>
+  <h2 class="section-title" id="cluster-title">Refine your cuisine style</h2>
+  <p class="section-sub" id="cluster-sub">Your region is highlighted. Stay authentic or explore a neighbouring tradition.</p>
+  <div class="cluster-grid" id="cluster-grid"></div>
+  <button class="generate-btn" onclick="showScreen('screen-persons',3)">Continue → Household Setup</button>
+</div>
+
+<!-- S3: HOUSEHOLD -->
+<div class="screen" id="screen-persons">
+  <button class="back-btn" onclick="showScreen('screen-cluster',2)">← Back</button>
+  <h2 class="section-title">Set up your household</h2>
+  <p class="section-sub">Add family members with dietary needs and birthdays. Add pets too — they're family.</p>
+
+  <!-- PEOPLE -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">👨‍👩‍👧 Family Members</span>
+      <button class="add-btn" onclick="addPerson()">+ Add Person</button>
+    </div>
+    <div class="person-col-headers">
+      <div class="col-label">Name</div><div class="col-label">Diet / Restriction</div>
+      <div class="col-label">Birthday</div><div class="col-label">Role</div><div></div>
+    </div>
+    <div id="persons-list"></div>
+  </div>
+
+  <!-- PETS -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">🐾 Pets <span style="font-size:.72rem;font-weight:400;color:var(--cardamom)">(optional)</span></span>
+      <button class="add-btn" onclick="addPet()">+ Add Pet</button>
+    </div>
+    <div id="pets-empty" style="font-size:.82rem;color:var(--cardamom);padding:.2rem 0">No pets added. Click "+ Add Pet" to include meal suggestions for your furry friends.</div>
+    <div class="pet-col-headers" id="pet-col-headers" style="display:none">
+      <div class="col-label">Pet Type</div><div class="col-label">Name</div>
+      <div class="col-label">Notes (e.g. senior, allergic)</div><div></div>
+    </div>
+    <div id="pets-list"></div>
+  </div>
+
+  <button class="generate-btn" onclick="showScreen('screen-prefs',4)">Continue → Preferences & Options</button>
+</div>
+
+<!-- S4: PREFS -->
+<div class="screen" id="screen-prefs">
+  <button class="back-btn" onclick="showScreen('screen-persons',3)">← Back</button>
+  <h2 class="section-title">Plan preferences</h2>
+  <p class="section-sub">Set your household diet type, eating habits and special options — we'll shape the whole calendar around them.</p>
+
+  <div class="meta-row">
+    <div class="field-group"><label class="field-label">Month</label>
+      <select class="field-select" id="month-select"><option>January</option><option>February</option><option selected>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+    <div class="field-group"><label class="field-label">Year</label>
+      <select class="field-select" id="year-select"><option>2025</option><option selected>2026</option><option>2027</option></select></div>
+    <div class="field-group"><label class="field-label">Family Size</label>
+      <input class="field-input" type="number" id="family-size" value="3" min="1" max="20"></div>
+  </div>
+
+  <div class="options-title">🥗 Diet Type</div>
+  <div class="diet-grid" id="diet-grid">
+    <div class="diet-chip selected" id="diet-nonveg" onclick="selectDiet('nonveg')"><span class="diet-icon">🍗</span><span class="diet-label">Non-Vegetarian</span><span class="diet-desc">Includes chicken, fish, eggs & meat</span></div>
+    <div class="diet-chip" id="diet-veg" onclick="selectDiet('veg')"><span class="diet-icon">🥦</span><span class="diet-label">Vegetarian</span><span class="diet-desc">No meat/fish — includes dairy & eggs</span></div>
+    <div class="diet-chip" id="diet-eggetarian" onclick="selectDiet('eggetarian')"><span class="diet-icon">🥚</span><span class="diet-label">Eggetarian</span><span class="diet-desc">Veg + eggs, no meat or fish</span></div>
+    <div class="diet-chip" id="diet-vegan" onclick="selectDiet('vegan')"><span class="diet-icon">🌱</span><span class="diet-label">Vegan</span><span class="diet-desc">No animal products at all</span></div>
+    <div class="diet-chip" id="diet-jain" onclick="selectDiet('jain')"><span class="diet-icon">🪷</span><span class="diet-label">Jain</span><span class="diet-desc">No root vegetables, no onion/garlic</span></div>
+    <div class="diet-chip" id="diet-diabetic" onclick="selectDiet('diabetic')"><span class="diet-icon">🩺</span><span class="diet-label">Diabetic-Friendly</span><span class="diet-desc">Low glycemic, less rice/sugar</span></div>
+  </div>
+
+  <!-- EAT OUT / ORDER ONLINE -->
+  <div class="eatout-row">
+    <span class="eatout-label">🍽️ Eating out or ordering in:</span>
+    <button class="freq-btn" id="freq-never" onclick="setFreq('never')">Never</button>
+    <button class="freq-btn active" id="freq-weekend" onclick="setFreq('weekend')">Weekends</button>
+    <button class="freq-btn" id="freq-weekly" onclick="setFreq('weekly')">Once a week</button>
+    <button class="freq-btn" id="freq-twice" onclick="setFreq('twice')">Twice a week</button>
+    <input class="eatout-pref" id="eatout-pref" placeholder="Preference (e.g. biryani, pizza, Chinese)" style="flex:1;min-width:160px">
+  </div>
+
+  <div class="options-title">Additional options</div>
+  <div class="options-grid">
+    <div class="opt-card" id="opt-fasting" onclick="toggleOpt('fasting')"><div class="opt-check" id="chk-fasting"></div><div><div class="opt-title">🌿 Fasting Days</div><div class="opt-desc">Light vrat meals on Fridays & Ekadashi — sabudana, fruits, sendha namak dishes.</div></div></div>
+    <div class="opt-card" id="opt-festival" onclick="toggleOpt('festival')"><div class="opt-check" id="chk-festival"></div><div><div class="opt-title">🎊 Festival Specials</div><div class="opt-desc">Auto-detect festivals for the month and suggest traditional celebration dishes.</div></div></div>
+    <div class="opt-card" id="opt-snacks" onclick="toggleOpt('snacks')"><div class="opt-check" id="chk-snacks"></div><div><div class="opt-title">☕ Evening Snack</div><div class="opt-desc">Add a 4–6 PM tiffin slot with region-specific light bites and chai.</div></div></div>
+    <div class="opt-card" id="opt-hydration" onclick="toggleOpt('hydration')"><div class="opt-check" id="chk-hydration"></div><div><div class="opt-title">💧 Hydration Tips</div><div class="opt-desc">Summer drink suggestions on hot months — neer mor, aam panna, nimbu pani.</div></div></div>
+    <div class="opt-card" id="opt-leftover" onclick="toggleOpt('leftover')"><div class="opt-check" id="chk-leftover"></div><div><div class="opt-title">♻️ Leftover Suggestions</div><div class="opt-desc">Mark next-day meals that can use yesterday's leftovers to cut prep time.</div></div></div>
+    <div class="opt-card" id="opt-petmeal" onclick="toggleOpt('petmeal')"><div class="opt-check" id="chk-petmeal"></div><div><div class="opt-title">🐾 Pet Meal Notes</div><div class="opt-desc">Show safe home-cooked meal suggestions for your pets alongside family meals.</div></div></div>
+  </div>
+
+  <button class="generate-btn" id="gen-btn" onclick="generatePlan()">✨ Generate My Thali Plan</button>
+</div>
+
+<!-- S5: PLAN -->
+<div class="screen" id="screen-plan">
+  <button class="back-btn" onclick="showScreen('screen-prefs',4)">← Edit Preferences</button>
+  <div class="badge-row" id="plan-badges"></div>
+  <div class="lang-bar" id="lang-bar" style="display:none">
+    <span class="lang-bar-label">🌐 Report language:</span>
+    <button class="lang-chip active" id="lang-en" onclick="switchLang('en')">English</button>
+    <button class="lang-chip" id="lang-regional" onclick="switchLang('regional')"><span id="lang-regional-name">Regional</span></button>
+  </div>
+
+  <div class="plan-layout">
+    <div>
+      <div class="plan-toolbar">
+        <div class="toolbar-left">
+          <div class="view-toggle">
+            <button class="view-btn active" id="vbtn-week" onclick="switchView('week')">📋 Weekly</button>
+            <button class="view-btn" id="vbtn-month" onclick="switchView('month')">📅 Monthly</button>
+          </div>
+          <span class="view-label" id="view-label">Week 1</span>
+        </div>
+        <div style="display:flex;gap:.4rem">
+          <button class="nav-btn" id="prev-btn" onclick="navigate(-1)" disabled>← Prev</button>
+          <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next →</button>
+        </div>
+      </div>
+      <div class="legend" id="legend-row"></div>
+      <div id="week-view"></div>
+      <div id="month-view" style="display:none"></div>
+    </div>
+
+    <!-- SIDEBAR -->
+    <div>
+      <!-- BUDGET PANEL -->
+      <div class="budget-panel" id="budget-panel">
+        <div class="budget-header">
+          <span class="budget-title">💰 Monthly Budget Estimate</span>
+        </div>
+        <div class="budget-tier-row">
+          <button class="budget-tier" id="bt-budget" onclick="setBudgetTier('budget')">🏘️ Budget</button>
+          <button class="budget-tier active" id="bt-mid" onclick="setBudgetTier('mid')">🏙️ Mid-range</button>
+          <button class="budget-tier" id="bt-premium" onclick="setBudgetTier('premium')">🌆 Premium</button>
+        </div>
+        <div class="budget-totals">
+          <div class="budget-item">
+            <div class="budget-item-label">Monthly Total</div>
+            <div class="budget-item-val" id="b-monthly">₹0</div>
+            <div class="budget-item-sub" id="b-family-note">for family</div>
+          </div>
+          <div class="budget-item">
+            <div class="budget-item-label">Per Person / Day</div>
+            <div class="budget-item-val" id="b-perday">₹0</div>
+            <div class="budget-item-sub">avg all meals</div>
+          </div>
+        </div>
+        <div id="budget-breakdown"></div>
+        <div class="budget-savings" id="budget-savings"></div>
+      </div>
+
+      <!-- SEASON BANNER -->
+      <div class="season-banner" id="season-banner"></div>
+
+      <!-- NUTRITION SUMMARY -->
+      <div class="nutri-summary" id="nutri-summary">
+        <div class="nutri-summary-title">📊 This Week's Nutrition Mix</div>
+        <div class="nutri-bars" id="nutri-bars"></div>
+      </div>
+
+      <!-- GROCERY -->
+      <div class="grocery-panel">
+        <div class="grocery-header"><h3>🛒 Grocery List</h3><span class="grocery-scope-badge" id="grocery-scope">This Week</span></div>
+        <div class="grocery-tabs">
+          <button class="gtab active" id="gtab-family" onclick="switchGTab('family')">🏠 Family</button>
+          <button class="gtab" id="gtab-pet" onclick="switchGTab('pet')">🐾 Pets</button>
+        </div>
+        <div class="grocery-body" id="grocery-body"></div>
+        <div class="grocery-tip-box"><div class="grocery-tip-title">💡 Tip</div><div class="grocery-tip-text" id="shopping-tip"></div></div>
+        <div class="grocery-actions">
+          <button class="grocery-btn" onclick="copyGrocery()">📋 Copy to Clipboard</button>
+          <button class="grocery-btn wa" onclick="shareWA()">💬 Share on WhatsApp</button>
+          <button class="grocery-btn" onclick="resetChecks()">↺ Reset Checklist</button>
+          <button class="grocery-btn dark" onclick="window.print()">🖨️ Print Plan + List</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title" id="modal-title">Day Detail</span><button class="modal-close" onclick="closeModalDirect()">×</button></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════ DATA ═══════════════════
+const STATES=["Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana","Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur","Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana","Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Delhi"];
+const STATE_CLUSTER={"Tamil Nadu":"sc","Kerala":"sc","Andhra Pradesh":"sc","Telangana":"sc","Karnataka":"sc","Goa":"wc","Maharashtra":"wc","Punjab":"np","Haryana":"np","Uttar Pradesh":"np","Delhi":"np","Bihar":"np","Uttarakhand":"np","West Bengal":"east","Odisha":"east","Assam":"east","Jharkhand":"east","Tripura":"east","Manipur":"east","Meghalaya":"east","Nagaland":"east","Mizoram":"east","Arunachal Pradesh":"east","Sikkim":"east","Rajasthan":"cen","Gujarat":"cen","Madhya Pradesh":"cen","Chhattisgarh":"cen","Himachal Pradesh":"him"};
+const CLUSTERS={"sc":{icon:"🥥",name:"South Coastal",gradient:"linear-gradient(90deg,#E8750A,#F0A500)",states:"Tamil Nadu · Kerala · Andhra · Telangana · Karnataka",desc:"Rice · Coconut · Tamarind · Curry Leaves · Seafood"},"wc":{icon:"🐟",name:"West Coast",gradient:"linear-gradient(90deg,#1E6B45,#2E9E6B)",states:"Goa · Maharashtra · Konkan",desc:"Fish · Kokum · Coconut Curry · Bhakri"},"np":{icon:"🫓",name:"North Plains",gradient:"linear-gradient(90deg,#B5341E,#E85D3A)",states:"Punjab · Haryana · UP · Delhi · Bihar",desc:"Roti · Dal · Paneer · Mustard · Tandoor"},"east":{icon:"🐠",name:"Eastern India",gradient:"linear-gradient(90deg,#5C3D2E,#8B6040)",states:"Bengal · Odisha · Assam · Northeast",desc:"Mustard Oil · Fish · Rice · Subtle Spices"},"cen":{icon:"🫙",name:"Central & West",gradient:"linear-gradient(90deg,#F0A500,#E8750A)",states:"Rajasthan · Gujarat · MP · Chhattisgarh",desc:"Dal Baati · Dhokla · Millet · Dry Sabzis"},"him":{icon:"🏔️",name:"Himalayan",gradient:"linear-gradient(90deg,#2E6B8B,#4A9BBF)",states:"Himachal Pradesh · Uttarakhand",desc:"Light · Seasonal · Siddu · Madra · Rajma"}};
+
+const MEALS={
+"sc":{breakfast:[{m:"Idli",s:"Sambar + Coconut Chutney",t:["grain","protein"]},{m:"Masala Dosa",s:"Tomato Chutney + Sambar",t:["grain"]},{m:"Ven Pongal",s:"Ghee + Pepper + Chutney",t:["grain","protein"]},{m:"Idiyappam",s:"Coconut Milk",t:["grain","dairy"]},{m:"Rava Upma",s:"Pickle + Chutney",t:["grain"]},{m:"Poori",s:"Potato Kurma",t:["grain","protein"]},{m:"Appam",s:"Vegetable Stew",t:["grain","greens"]},{m:"Sevai Upma",s:"Peanut Chutney",t:["grain","protein"]},{m:"Ragi Dosa",s:"Onion Chutney",t:["grain","greens"]},{m:"Puttu",s:"Kadala Curry",t:["grain","protein"]},{m:"Uthappam",s:"Tomato Chutney",t:["grain","greens"]},{m:"Wheat Dosa",s:"Jaggery + Ghee",t:["grain","dairy"]},{m:"Adai",s:"Avial + Jaggery",t:["grain","protein","greens"]},{m:"Bread Omelette",s:"Filter Coffee",t:["grain","protein"]}],
+lunch:[{m:"Country Chicken Kuzhambu",s:"Rice + Rasam + Curd",t:["protein","dairy"]},{m:"Sambar Sadam",s:"Drumstick + Appalam",t:["protein","greens","grain"]},{m:"Meen Kulambu",s:"Rice + Rasam + Curd",t:["protein","dairy","grain"]},{m:"Keerai Masiyal",s:"Rice + Rasam + Appalam",t:["greens","grain"]},{m:"Mor Kuzhambu",s:"Rice + Vendakkai Fry",t:["dairy","greens","grain"]},{m:"Vatha Kuzhambu",s:"Rice + Keerai Kootu",t:["greens","grain"]},{m:"Chicken Biryani",s:"Raita + Onion Salad",t:["protein","grain","dairy"]},{m:"Puliyodarai",s:"Potato Chips + Papad",t:["grain"]},{m:"Garlic Kuzhambu",s:"Rice + Beans Poriyal",t:["grain","greens"]},{m:"Rasam Sadam",s:"Potato Fry + Curd",t:["grain","dairy"]},{m:"Egg Curry",s:"Rice + Rasam",t:["protein","grain"]},{m:"Chettinad Chicken",s:"Rice + Rasam + Curd",t:["protein","dairy","grain"]},{m:"Kootu + Rasam",s:"Rice + Papad",t:["greens","grain","protein"]},{m:"Lemon Rice",s:"Potato Roast + Papad",t:["grain","greens"]}],
+snack:[{m:"Murukku",s:"Filter Coffee",t:["grain"]},{m:"Peanut Sundal",s:"Lemon + Coconut",t:["protein"]},{m:"Pazham Pori",s:"Chai",t:["grain"]},{m:"Masala Vadai",s:"Chutney",t:["grain","protein"]},{m:"Kozhukattai",s:"Coconut Chutney",t:["grain"]},{m:"Banana + Peanuts",s:"",t:["grain","protein"]},{m:"Pakoda",s:"Tea",t:["grain"]},{m:"Mixture",s:"Coffee",t:["grain"]}],
+dinner:[{m:"Dosa",s:"Sambar + Chutney",t:["grain"]},{m:"Curd Rice",s:"Narthangai Pickle",t:["grain","dairy"]},{m:"Wheat Upma",s:"Chutney",t:["grain"]},{m:"Podi Dosa",s:"Coconut Chutney",t:["grain"]},{m:"Idli",s:"Podi + Sesame Oil",t:["grain"]},{m:"Chapathi",s:"Dal Curry",t:["grain","protein"]},{m:"Adai Dosa",s:"Avial",t:["grain","protein","greens"]},{m:"Idiyappam",s:"Coconut Milk",t:["grain","dairy"]},{m:"Rice Kanji",s:"Pickle + Vadagam",t:["grain","dairy"]},{m:"Rava Idli",s:"Sambar + Chutney",t:["grain"]}],
+fasting:[{m:"Sabudana Khichdi",s:"Peanut + Curd",t:["grain","dairy","protein"]},{m:"Fruits + Milk",s:"",t:["dairy","greens"]},{m:"Sweet Potato",s:"Lemon + Rock Salt",t:["grain"]},{m:"Vrat Rice",s:"Curd",t:["grain","dairy"]}]},
+"np":{breakfast:[{m:"Aloo Paratha",s:"Butter + Dahi",t:["grain","dairy"]},{m:"Chole Bhature",s:"Pickle + Onion",t:["grain","protein"]},{m:"Methi Paratha",s:"Dahi",t:["grain","greens","dairy"]},{m:"Poha",s:"Lemon + Sev",t:["grain"]},{m:"Puri Sabzi",s:"Halwa",t:["grain"]},{m:"Besan Cheela",s:"Mint Chutney + Dahi",t:["grain","protein","dairy"]},{m:"Moong Dal Chilla",s:"Mint Chutney",t:["grain","protein"]},{m:"Gobhi Paratha",s:"Dahi + Pickle",t:["grain","dairy","greens"]},{m:"Upma",s:"Chutney",t:["grain"]},{m:"Sooji Halwa + Puri",s:"",t:["grain","dairy"]}],
+lunch:[{m:"Dal Makhani",s:"Rice / Roti + Salad",t:["protein","grain"]},{m:"Paneer Butter Masala",s:"Butter Naan",t:["protein","grain","dairy"]},{m:"Chicken Curry",s:"Jeera Rice",t:["protein","grain"]},{m:"Rajma Chawal",s:"Pickle + Salad",t:["protein","grain"]},{m:"Palak Paneer",s:"Roti",t:["greens","protein","dairy"]},{m:"Chole",s:"Batura + Onion",t:["protein","grain"]},{m:"Kadhi Chawal",s:"Papad + Pickle",t:["dairy","grain"]},{m:"Mutton Curry",s:"Roti + Onion",t:["protein","grain"]},{m:"Sarson Da Saag",s:"Makki Roti + Butter",t:["greens","grain","dairy"]},{m:"Aloo Gobi",s:"Roti + Dal",t:["greens","grain","protein"]}],
+snack:[{m:"Samosa",s:"Chutney + Chai",t:["grain"]},{m:"Aloo Tikki",s:"Dahi + Chutney",t:["grain","dairy"]},{m:"Pakoda",s:"Tea",t:["grain"]},{m:"Makhana",s:"Ghee + Rock Salt",t:["protein"]},{m:"Jalebi",s:"Chai",t:["grain"]},{m:"Chaat",s:"Dahi + Sev",t:["grain","dairy"]}],
+dinner:[{m:"Roti",s:"Dal Tadka",t:["grain","protein"]},{m:"Khichdi",s:"Ghee + Papad + Dahi",t:["grain","dairy","protein"]},{m:"Chapathi",s:"Mixed Veg Sabzi",t:["grain","greens"]},{m:"Paratha",s:"Dahi + Pickle",t:["grain","dairy"]},{m:"Dal Fry",s:"Jeera Rice",t:["protein","grain"]},{m:"Phulka",s:"Aloo Curry",t:["grain"]}],
+fasting:[{m:"Sabudana Khichdi",s:"Peanut + Dahi",t:["grain","dairy","protein"]},{m:"Kuttu Paratha",s:"Dahi",t:["grain","dairy"]},{m:"Singhare Ka Halwa",s:"",t:["grain"]},{m:"Fruits + Milk",s:"",t:["dairy","greens"]}]},
+"wc":{breakfast:[{m:"Thalipeeth",s:"Dahi + Ghee",t:["grain","dairy"]},{m:"Misal Pav",s:"Onion + Lemon",t:["protein","grain"]},{m:"Sabudana Khichdi",s:"Peanut Chutney",t:["grain","protein"]},{m:"Poha",s:"Sev + Lemon",t:["grain"]},{m:"Goan Sannas",s:"Coconut Chutney",t:["grain"]},{m:"Rava Idli",s:"Sambar + Chutney",t:["grain"]}],
+lunch:[{m:"Fish Curry",s:"Rice + Sol Kadi",t:["protein","grain","dairy"]},{m:"Prawn Masala",s:"Bhakri + Salad",t:["protein","grain"]},{m:"Chicken Xacuti",s:"Rice",t:["protein","grain"]},{m:"Pithla Bhakri",s:"Thincha + Onion",t:["grain","protein"]},{m:"Vangi Bhaat",s:"Raita",t:["grain","greens","dairy"]},{m:"Solkadhi Rice",s:"Papad + Pickle",t:["grain","dairy"]},{m:"Kolambi Bhaat",s:"Kachumber",t:["protein","grain"]}],
+snack:[{m:"Vada Pav",s:"Chutney",t:["grain"]},{m:"Chakli",s:"Chai",t:["grain"]},{m:"Batata Vada",s:"",t:["grain"]},{m:"Puranpoli",s:"Ghee",t:["grain","dairy"]}],
+dinner:[{m:"Bhakri",s:"Vegetable Curry",t:["grain","greens"]},{m:"Rice",s:"Dal + Sabzi",t:["grain","protein","greens"]},{m:"Chapathi",s:"Chicken Masala",t:["grain","protein"]},{m:"Varan Bhaat",s:"Ghee + Pickle",t:["grain","protein","dairy"]}],
+fasting:[{m:"Sabudana Khichdi",s:"Peanut",t:["grain","protein"]},{m:"Fruits",s:"",t:["greens"]},{m:"Vrat Batata Bhaji",s:"",t:["grain"]}]},
+"east":{breakfast:[{m:"Luchi",s:"Aloo Dum",t:["grain"]},{m:"Pitha",s:"Coconut Stuffing",t:["grain","dairy"]},{m:"Poha",s:"Sev + Onion",t:["grain"]},{m:"Roti",s:"Egg Curry",t:["grain","protein"]},{m:"Semolina Upma",s:"Chutney",t:["grain"]}],
+lunch:[{m:"Macher Jhol",s:"Rice + Dal",t:["protein","grain"]},{m:"Chingri Malai Curry",s:"Rice",t:["protein","grain","dairy"]},{m:"Mustard Fish",s:"Rice + Begun Bhaja",t:["protein","grain","greens"]},{m:"Shorshe Ilish",s:"Rice",t:["protein","grain"]},{m:"Posto Aloo",s:"Rice + Dal",t:["grain","greens"]},{m:"Dhokar Dalna",s:"Rice",t:["grain","protein"]}],
+snack:[{m:"Muri + Chanachur",s:"",t:["grain"]},{m:"Nimki",s:"Chai",t:["grain"]},{m:"Singhara",s:"Chai",t:["grain"]},{m:"Rosogolla",s:"",t:["dairy"]}],
+dinner:[{m:"Roti",s:"Dal + Sabzi",t:["grain","protein","greens"]},{m:"Khichuri",s:"Papad + Pickle",t:["grain","protein"]},{m:"Luchi",s:"Cholar Dal",t:["grain","protein"]},{m:"Paratha",s:"Dahi + Pickle",t:["grain","dairy"]}],
+fasting:[{m:"Fruits + Milk",s:"",t:["dairy","greens"]},{m:"Sabudana Khichdi",s:"",t:["grain","protein"]}]},
+"cen":{breakfast:[{m:"Poha",s:"Sev + Chutney",t:["grain"]},{m:"Dhokla",s:"Green Chutney",t:["grain","protein"]},{m:"Thepla",s:"Dahi + Pickle",t:["grain","dairy"]},{m:"Fafda",s:"Jalebi + Chutney",t:["grain"]},{m:"Moong Dal Chilla",s:"Mint Chutney",t:["grain","protein"]},{m:"Handvo",s:"Chutney",t:["grain","greens"]}],
+lunch:[{m:"Dal Baati Churma",s:"Ghee + Garlic Chutney",t:["protein","grain","dairy"]},{m:"Gatte Ki Sabzi",s:"Roti + Chaas",t:["protein","grain","dairy"]},{m:"Undhiyu",s:"Puri + Chutney",t:["greens","grain"]},{m:"Kadhi Chawal",s:"Papad + Pickle",t:["dairy","grain"]},{m:"Paneer Khurchan",s:"Roti",t:["protein","grain","dairy"]},{m:"Laal Maas",s:"Bajra Roti",t:["protein","grain"]},{m:"Dal Dhokli",s:"Ghee + Lime",t:["protein","grain","dairy"]}],
+snack:[{m:"Chakli",s:"Chai",t:["grain"]},{m:"Gathiya",s:"Chutney",t:["grain"]},{m:"Mathri",s:"Pickle",t:["grain"]},{m:"Khandvi",s:"",t:["grain","dairy"]}],
+dinner:[{m:"Roti",s:"Dal + Sabzi",t:["grain","protein","greens"]},{m:"Bajra Khichdi",s:"Ghee + Dahi",t:["grain","dairy"]},{m:"Chapathi",s:"Aloo Sabzi",t:["grain"]},{m:"Jowar Bhakri",s:"Pithla",t:["grain","protein"]}],
+fasting:[{m:"Sabudana Khichdi",s:"Peanut",t:["grain","protein"]},{m:"Singhare Ki Puri",s:"Dahi",t:["grain","dairy"]},{m:"Fruits + Milk",s:"",t:["dairy","greens"]}]},
+"him":{breakfast:[{m:"Siddu",s:"Ghee + Walnut Chutney",t:["grain","dairy"]},{m:"Roti",s:"Honey + Butter",t:["grain","dairy"]},{m:"Paratha",s:"Dahi + Pickle",t:["grain","dairy"]},{m:"Momos",s:"Spicy Chutney",t:["grain","protein"]},{m:"Poha",s:"Peanuts + Lemon",t:["grain"]}],
+lunch:[{m:"Madra (Chana)",s:"Rice + Raita",t:["protein","grain","dairy"]},{m:"Dham",s:"Boondi Raita",t:["grain","protein","dairy"]},{m:"Trout Fish Curry",s:"Rice + Salad",t:["protein","grain","greens"]},{m:"Chana Madra",s:"Roti",t:["protein","grain"]},{m:"Rajma Chawal",s:"Papad",t:["protein","grain"]},{m:"Khatta Meat",s:"Roti",t:["protein","grain"]}],
+snack:[{m:"Butter Tea",s:"Tsampa",t:["dairy","grain"]},{m:"Akhrot Pakoda",s:"Chutney",t:["grain","protein"]},{m:"Babru",s:"Honey",t:["grain","dairy"]},{m:"Seasonal Fruit",s:"",t:["greens"]}],
+dinner:[{m:"Roti",s:"Dal + Sabzi",t:["grain","protein","greens"]},{m:"Khichdi",s:"Ghee + Dahi",t:["grain","dairy"]},{m:"Phulka",s:"Vegetable Curry",t:["grain","greens"]},{m:"Chapathi",s:"Dal Fry",t:["grain","protein"]}],
+fasting:[{m:"Fruits + Milk",s:"",t:["dairy","greens"]},{m:"Kuttu Paratha",s:"Dahi",t:["grain","dairy"]}]}
+};
+
+// PET MEAL DATA
+const PET_MEALS={
+"dog":{name:"Dog 🐕",meals:["Boiled rice + boiled chicken (no salt)","Plain rice + mashed sweet potato","Boiled eggs + rice (no onion/garlic)","Cooked moong dal + rice","Plain boiled carrots + rice","Cooked pumpkin + rice — great for digestion","Paneer (small amount) + rice","Curd rice — probiotic and cooling"],tips:"Avoid: onion, garlic, grapes, chocolate, spicy food. Always serve at room temperature."},
+"cat":{name:"Cat 🐈",meals:["Boiled chicken (boneless, no salt)","Cooked fish (no bones, no spices)","Scrambled eggs (plain, no butter)","Boiled tuna in water","Plain cooked rice + boiled chicken","Steamed salmon flakes","Cooked turkey (plain)","Plain chicken broth (no onion/garlic)"],tips:"Avoid: onion, garlic, milk (lactose), raw fish, grapes. Cats need protein — no veg-only meals."},
+"cow":{name:"Cow 🐄",meals:["Fresh grass + hay","Dry fodder + rice bran","Cotton seed + wheat bran","Fresh green leaves (napier grass)","Maize silage","Sugarcane top + straw","Groundnut cake + jaggery water","Banana leaves + green gram husk"],tips:"Ensure fresh clean water at all times. Avoid mouldy fodder or wilted plants."},
+"goat":{name:"Goat 🐐",meals:["Dry hay + fresh leaves","Groundnut leaves + jowar straw","Neem leaves + grass","Green gram plant tops","Banana peel + dry fodder","Maize leaves + gram husk","Mixed dry fodder","Moringa / drumstick leaves"],tips:"Goats love variety. Fresh water always. Avoid: mouldy hay, too many grains."},
+"parrot":{name:"Parrot 🦜",meals:["Millets (ragi, jowar) + sunflower seeds","Fresh papaya + apple slices","Boiled corn kernels","Fresh guava + pomegranate seeds","Soaked moong dal (sprouted)","Fresh mango (small piece)","Cucumber + carrot sticks","Banana slices + coconut pieces"],tips:"Avoid: avocado, chocolate, onion, garlic, salt, caffeine. Always fresh, no processed food."},
+"pigeon":{name:"Pigeon 🕊️",meals:["Mixed millets (pearl millet, sorghum)","Wheat grains + paddy","Corn + sunflower seeds","Dried peas + ragi","Green gram + red lentils","Sesame seeds + millet","Cooked rice (small amount)","Sorghum + corn mix"],tips:"Always fresh water. Pigeons thrive on mixed seeds and grains. Avoid salt and processed foods."}
+};
+
+const PET_GROCERY={
+"dog":{"Dog Food Essentials":[{n:"Plain Rice",q:"1 kg"},{n:"Chicken Breast (boiled)",q:"500 g"},{n:"Eggs",q:"6"},{n:"Sweet Potato",q:"2"},{n:"Carrots",q:"4"},{n:"Moong Dal",q:"200 g"},{n:"Plain Curd",q:"250 ml"}]},
+"cat":{"Cat Food Essentials":[{n:"Chicken Breast (boneless)",q:"300 g"},{n:"Fresh Fish (seer/tuna)",q:"250 g"},{n:"Eggs",q:"6"},{n:"Plain Rice",q:"500 g"}]},
+"cow":{"Cow Feed":[{n:"Dry Hay / Fodder",q:"per day supply"},{n:"Rice Bran",q:"2 kg"},{n:"Groundnut Cake",q:"1 kg"},{n:"Jaggery",q:"200 g"}]},
+"goat":{"Goat Feed":[{n:"Dry Hay",q:"daily supply"},{n:"Groundnut Leaves / Gram Husk",q:"1 kg"},{n:"Moringa / Drumstick Leaves",q:"fresh bunch"}]},
+"parrot":{"Parrot Feed":[{n:"Mixed Millets",q:"500 g"},{n:"Sunflower Seeds",q:"200 g"},{n:"Fresh Fruits (papaya, guava)",q:"weekly"},{n:"Corn (boiled)",q:"2 ears"}]},
+"pigeon":{"Pigeon Feed":[{n:"Mixed Grain Blend",q:"1 kg"},{n:"Pearl Millet",q:"500 g"},{n:"Wheat / Paddy Grains",q:"500 g"},{n:"Dried Peas",q:"200 g"}]}
+};
+
+const FESTIVALS={1:[{d:14,n:"Pongal / Makar Sankranti",meals:["Sweet Pongal","Chakkara Pongal","Sesame Rice","Til Laddoo"]}],2:[{d:18,n:"Maha Shivaratri",meals:["Sabudana Khichdi","Fruits","Thandai"]}],3:[{d:14,n:"Holi",meals:["Gujiya","Thandai","Puranpoli"]},{d:30,n:"Ugadi",meals:["Ugadi Pachadi","Holige","Shrikhand Puri"]}],4:[{d:6,n:"Tamil New Year",meals:["Mango Rice","Sweet Pongal","Payasam"]},{d:14,n:"Vishu",meals:["Sadya","Payasam","Avial"]}],5:[{d:23,n:"Buddha Purnima",meals:["Khichdi","Dal","Sattvic Thali"]}],7:[{d:10,n:"Rath Yatra",meals:["Khechudi","Dalma","Panchavyanjana"]}],8:[{d:15,n:"Onam / Independence Day",meals:["Sadya — full feast","Payasam","Olan","Avial"]}],9:[{d:1,n:"Ganesh Chaturthi",meals:["Modak","Ukdiche Modak","Karanji"]},{d:23,n:"Navratri",meals:["Sabudana Khichdi","Kuttu Paratha","Fruit Chaat"]}],10:[{d:2,n:"Navratri / Dassehra",meals:["Vrat Thali","Sabudana","Singhare Ki Puri"]}],11:[{d:1,n:"Diwali",meals:["Chakli","Besan Laddoo","Kheer","Mathri"]}],12:[{d:25,n:"Christmas",meals:["Plum Cake","Appam + Stew","Rice Pudding"]}]};
+
+const BIRTHDAY_SPECIALS=["Special Biryani or favourite dish","Homemade cake or meetha","Payasam / Kheer","Puri + Halwa","Family favourite curry feast","Sweet pongal + vadai","Gulab Jamun + pulao","Whatever they love most! 🎂"];
+const EATOUT_OPTIONS={weekend:[6,0],weekly:[6],twice:[3,6]};
+const EATOUT_DISHES_DEFAULT=["Biryani from restaurant","Chinese takeaway","Pizza night","Butter Chicken + Naan","Dosa from hotel","Chole Bhature from dhaba","South Indian hotel meal","Grilled chicken + salad","Rolls / Wraps takeaway","Thai curry + rice"];
+const HYDRATION=["Neer Mor","Tender Coconut Water","Aam Panna","Nimbu Pani","Rose Sherbet","Jaljeera","Cucumber Lime Water"];
+const NUTRI_ROT=[["protein","greens","grain"],["grain","dairy","greens"],["protein","grain","dairy"],["greens","grain","protein"],["dairy","grain","greens"],["protein","greens","grain"],["grain","dairy","protein"]];
+const NUTRI_LABELS={protein:"🥚 Protein",greens:"🥬 Greens",grain:"🌾 Grains",dairy:"🥛 Dairy"};
+const VEG_ALTS=["Paneer Masala","Mushroom Stir Fry","Soya Chunks Curry","Mixed Veg Curry","Dal Curry","Egg Curry","Tofu Sabzi","Chickpea Masala"];
+
+const GROCERY_DATA={
+"sc":{"Grains & Rice":[{n:"Idli Rice / Raw Rice",q:"5 kg"},{n:"Urad Dal (batter)",q:"500 g"},{n:"Toor Dal (sambar)",q:"500 g"},{n:"Ragi Flour",q:"500 g"},{n:"Wheat Flour",q:"1 kg"},{n:"Rava / Semolina",q:"500 g"},{n:"Poha (Aval)",q:"250 g"}],"Vegetables":[{n:"Drumstick",q:"4–6 pcs"},{n:"Tomatoes",q:"1.5 kg"},{n:"Onions",q:"1 kg"},{n:"Curry Leaves",q:"2 bunches"},{n:"Spinach / Keerai",q:"2 bunches"},{n:"Brinjal",q:"250 g"},{n:"Ladies Finger",q:"300 g"},{n:"Potato",q:"500 g"}],"Spices & Pantry":[{n:"Tamarind",q:"200 g"},{n:"Mustard Seeds",q:"100 g"},{n:"Asafoetida",q:"1 tin"},{n:"Red Chilli Powder",q:"100 g"},{n:"Coriander Powder",q:"100 g"},{n:"Sesame Oil",q:"500 ml"},{n:"Coconut Oil",q:"250 ml"}],"Protein":[{n:"Eggs",q:"12–18"},{n:"Fish (Seer / Mackerel)",q:"500 g"},{n:"Chicken",q:"1 kg"}],"Dairy":[{n:"Curd / Yoghurt",q:"1 litre"},{n:"Fresh Coconut",q:"4–5"},{n:"Ghee",q:"200 g"}]},
+"np":{"Grains & Flour":[{n:"Whole Wheat Atta",q:"5 kg"},{n:"Basmati Rice",q:"2 kg"},{n:"Besan",q:"500 g"},{n:"Suji / Semolina",q:"250 g"}],"Vegetables":[{n:"Potatoes",q:"2 kg"},{n:"Onions",q:"1.5 kg"},{n:"Tomatoes",q:"1 kg"},{n:"Spinach",q:"2 bunches"},{n:"Cauliflower",q:"1 head"},{n:"Green Peas",q:"300 g"}],"Spices":[{n:"Cumin Seeds",q:"100 g"},{n:"Garam Masala",q:"100 g"},{n:"Turmeric Powder",q:"50 g"},{n:"Red Chilli Powder",q:"100 g"},{n:"Mustard Oil",q:"1 litre"}],"Protein":[{n:"Chana Dal / Toor Dal",q:"500 g"},{n:"Rajma",q:"500 g"},{n:"Paneer",q:"400 g"},{n:"Eggs",q:"12"},{n:"Chicken",q:"1 kg"}],"Dairy":[{n:"Dahi / Curd",q:"1 litre"},{n:"Milk",q:"2 litres"},{n:"Ghee",q:"250 g"}]},
+"wc":{"Grains":[{n:"Rice",q:"3 kg"},{n:"Jowar / Bajra Flour",q:"1 kg"},{n:"Rava",q:"500 g"},{n:"Poha",q:"250 g"}],"Vegetables":[{n:"Onions",q:"1 kg"},{n:"Tomatoes",q:"1 kg"},{n:"Fresh Coconut",q:"3–4"},{n:"Ginger-Garlic",q:"150 g"}],"Spices":[{n:"Kokum",q:"100 g"},{n:"Coconut Oil",q:"500 ml"},{n:"Malvani Masala",q:"100 g"}],"Protein":[{n:"Fish (Pomfret / Bangda)",q:"500 g"},{n:"Prawns",q:"300 g"},{n:"Chicken",q:"1 kg"},{n:"Eggs",q:"12"}],"Dairy":[{n:"Curd",q:"500 ml"},{n:"Ghee",q:"200 g"}]},
+"east":{"Grains":[{n:"Fine Grain Rice",q:"5 kg"},{n:"Atta",q:"1 kg"},{n:"Maida",q:"500 g"}],"Vegetables":[{n:"Onions",q:"1 kg"},{n:"Tomatoes",q:"800 g"},{n:"Eggplant",q:"300 g"},{n:"Greens",q:"2 bunches"}],"Spices":[{n:"Mustard Oil",q:"1 litre"},{n:"Panch Phoron",q:"100 g"},{n:"Turmeric",q:"50 g"}],"Protein":[{n:"Fish (Rohu / Hilsa)",q:"1 kg"},{n:"Eggs",q:"12"},{n:"Chana Dal",q:"500 g"}],"Dairy":[{n:"Curd",q:"500 ml"},{n:"Ghee",q:"200 g"}]},
+"cen":{"Grains":[{n:"Bajra Flour",q:"1 kg"},{n:"Jowar Flour",q:"1 kg"},{n:"Wheat Flour",q:"2 kg"},{n:"Besan",q:"500 g"},{n:"Rice",q:"2 kg"}],"Vegetables":[{n:"Onions",q:"1 kg"},{n:"Tomatoes",q:"1 kg"},{n:"Methi Leaves",q:"2 bunches"},{n:"Potatoes",q:"1 kg"}],"Spices":[{n:"Cumin Seeds",q:"100 g"},{n:"Amchur (Dry Mango)",q:"50 g"},{n:"Garam Masala",q:"100 g"},{n:"Groundnut Oil",q:"1 litre"},{n:"Ghee",q:"500 g"}],"Protein":[{n:"Toor Dal",q:"500 g"},{n:"Chana Dal",q:"500 g"},{n:"Paneer",q:"300 g"},{n:"Eggs",q:"12"}],"Dairy":[{n:"Curd / Chaas",q:"1 litre"},{n:"Ghee (extra)",q:"200 g"}]},
+"him":{"Grains":[{n:"Wheat Flour",q:"3 kg"},{n:"Rice",q:"2 kg"},{n:"Kuttu Flour",q:"500 g"},{n:"Rajma",q:"500 g"}],"Vegetables":[{n:"Potatoes",q:"1.5 kg"},{n:"Onions",q:"1 kg"},{n:"Spinach",q:"2 bunches"},{n:"Turnip",q:"300 g"}],"Spices":[{n:"Cumin Seeds",q:"100 g"},{n:"Mustard Oil",q:"500 ml"},{n:"Turmeric",q:"50 g"},{n:"Timur Pepper",q:"30 g"}],"Protein":[{n:"Rajma",q:"500 g"},{n:"Chana",q:"500 g"},{n:"Eggs",q:"12"}],"Dairy":[{n:"A2 Ghee",q:"300 g"},{n:"Curd",q:"500 ml"},{n:"Milk",q:"1.5 litres"}]}
+};
+
+const SHOPPING_TIPS={"sc":"Buy fresh curry leaves, coconut & fish twice weekly. Stock tamarind, rice & dals monthly in bulk.","np":"Atta, dal & whole spices monthly from kirana. Fresh greens and paneer twice a week.","wc":"Fresh fish best on Tue & Fri (market days). Buy kokum & coconut oil in bulk.","east":"Mustard oil & fresh fish weekly essentials. Buy panch phoron in bulk.","cen":"Bajra & jowar flours keep well airtight. Buy ghee in bulk from local dairies.","him":"Stock ghee & dry rajma monthly. Local markets have the best seasonal produce."};
+
+// ═══════════ STATE LANGUAGES ═══════════
+const STATE_LANG={
+  "Tamil Nadu":{name:"தமிழ்",code:"ta",labels:{breakfast:"காலை உணவு",lunch:"மதிய உணவு",snack:"மாலை தின்பண்டம்",dinner:"இரவு உணவு",fasting:"விரத உணவு",grocery:"மளிகை பட்டியல்",week:"வாரம்",day:"நாள்",plan:"திட்டம்",print:"அச்சிடு"}},
+  "Kerala":{name:"മലയാളം",code:"ml",labels:{breakfast:"പ്രഭാതഭക്ഷണം",lunch:"ഉച്ചഭക്ഷണം",snack:"വൈകുന്നേരം ലഘുഭക്ഷണം",dinner:"അത്താഴം",fasting:"വ്രതം",grocery:"പലചരക്ക് ലിസ്റ്റ്",week:"ആഴ്ച",day:"ദിവസം",plan:"പദ്ധതി",print:"പ്രിന്റ്"}},
+  "Andhra Pradesh":{name:"తెలుగు",code:"te",labels:{breakfast:"అల్పాహారం",lunch:"మధ్యాహ్న భోజనం",snack:"సాయంత్రం అల్పాహారం",dinner:"రాత్రి భోజనం",fasting:"ఉపవాసం",grocery:"కిరాణా జాబితా",week:"వారం",day:"రోజు",plan:"ప్రణాళిక",print:"ముద్రించు"}},
+  "Telangana":{name:"తెలుగు",code:"te",labels:{breakfast:"అల్పాహారం",lunch:"మధ్యాహ్న భోజనం",snack:"సాయంత్రం అల్పాహారం",dinner:"రాత్రి భోజనం",fasting:"ఉపవాసం",grocery:"కిరాణా జాబితా",week:"వారం",day:"రోజు",plan:"ప్రణాళిక",print:"ముద్రించు"}},
+  "Karnataka":{name:"ಕನ್ನಡ",code:"kn",labels:{breakfast:"ಬೆಳಗಿನ ಉಪಾಹಾರ",lunch:"ಮಧ್ಯಾಹ್ನದ ಊಟ",snack:"ಸಂಜೆ ತಿಂಡಿ",dinner:"ರಾತ್ರಿ ಊಟ",fasting:"ಉಪವಾಸ",grocery:"ದಿನಸಿ ಪಟ್ಟಿ",week:"ವಾರ",day:"ದಿನ",plan:"ಯೋಜನೆ",print:"ಮುದ್ರಿಸಿ"}},
+  "Maharashtra":{name:"मराठी",code:"mr",labels:{breakfast:"नाश्ता",lunch:"दुपारचे जेवण",snack:"संध्याकाळचा नाश्ता",dinner:"रात्रीचे जेवण",fasting:"उपवास",grocery:"किराणा यादी",week:"आठवडा",day:"दिवस",plan:"योजना",print:"छापा"}},
+  "Goa":{name:"कोंकणी",code:"kok",labels:{breakfast:"सकाळचो नास्तो",lunch:"दनपारचें जेवण",snack:"सांजेचो नास्तो",dinner:"राती जेवण",fasting:"उपास",grocery:"किराणा यादी",week:"सप्तक",day:"दीस",plan:"योजना",print:"छाप"}},
+  "Punjab":{name:"ਪੰਜਾਬੀ",code:"pa",labels:{breakfast:"ਸਵੇਰ ਦਾ ਨਾਸ਼ਤਾ",lunch:"ਦੁਪਹਿਰ ਦਾ ਖਾਣਾ",snack:"ਸ਼ਾਮ ਦਾ ਨਾਸ਼ਤਾ",dinner:"ਰਾਤ ਦਾ ਖਾਣਾ",fasting:"ਵਰਤ",grocery:"ਕਿਰਾਨਾ ਸੂਚੀ",week:"ਹਫ਼ਤਾ",day:"ਦਿਨ",plan:"ਯੋਜਨਾ",print:"ਛਾਪੋ"}},
+  "Haryana":{name:"हरियाणवी",code:"bgc",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"हफ्ता",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Uttar Pradesh":{name:"हिंदी",code:"hi",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"सप्ताह",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Delhi":{name:"हिंदी",code:"hi",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"सप्ताह",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Bihar":{name:"हिंदी",code:"hi",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"सप्ताह",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Jharkhand":{name:"हिंदी",code:"hi",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"सप्ताह",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Uttarakhand":{name:"हिंदी",code:"hi",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"सप्ताह",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Madhya Pradesh":{name:"हिंदी",code:"hi",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"सप्ताह",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Chhattisgarh":{name:"छत्तीसगढ़ी",code:"hne",labels:{breakfast:"बिहनिया नाश्ता",lunch:"दुपहरिया के खाना",snack:"बेरा नाश्ता",dinner:"रतिहा के खाना",fasting:"उपास",grocery:"किराना लिस्ट",week:"हफ्ता",day:"दिन",plan:"योजना",print:"छापो"}},
+  "Rajasthan":{name:"राजस्थानी",code:"raj",labels:{breakfast:"सुबह रो नाश्तो",lunch:"दोपहर रो खाणो",snack:"सांझ रो नाश्तो",dinner:"रात रो खाणो",fasting:"व्रत",grocery:"किराणा सूची",week:"हफ्तो",day:"दिन",plan:"योजना",print:"छापो"}},
+  "Gujarat":{name:"ગુજરાતી",code:"gu",labels:{breakfast:"સવારનો નાસ્તો",lunch:"બપોરનું ભોજન",snack:"સાંજનો નાસ્તો",dinner:"રાત્રિભોજન",fasting:"ઉપવાસ",grocery:"કિરાણાની યાદી",week:"અઠવાડિયું",day:"દિવસ",plan:"યોજના",print:"છાપો"}},
+  "West Bengal":{name:"বাংলা",code:"bn",labels:{breakfast:"সকালের খাবার",lunch:"দুপুরের খাবার",snack:"বিকেলের জলখাবার",dinner:"রাতের খাবার",fasting:"উপবাস",grocery:"মুদিখানার তালিকা",week:"সপ্তাহ",day:"দিন",plan:"পরিকল্পনা",print:"ছাপুন"}},
+  "Odisha":{name:"ଓଡ଼ିଆ",code:"or",labels:{breakfast:"ସକାଳ ଜଳଖିଆ",lunch:"ଦୁପୁର ଭୋଜନ",snack:"ସନ୍ଧ୍ୟା ଜଳଖିଆ",dinner:"ରାତ୍ରି ଭୋଜନ",fasting:"ଉପବାସ",grocery:"ଦୋକାନ ତାଲିକା",week:"ସପ୍ତାହ",day:"ଦିନ",plan:"ଯୋଜନା",print:"ଛପା"}},
+  "Assam":{name:"অসমীয়া",code:"as",labels:{breakfast:"ৰাতিপুৱাৰ আহাৰ",lunch:"দুপৰীয়াৰ আহাৰ",snack:"বিয়লিৰ জলপান",dinner:"ৰাতিৰ আহাৰ",fasting:"উপবাস",grocery:"মুদিৰ তালিকা",week:"সপ্তাহ",day:"দিন",plan:"পৰিকল্পনা",print:"মুদ্ৰণ"}},
+  "Himachal Pradesh":{name:"हिमाचली",code:"him",labels:{breakfast:"सुबह दा नाश्ता",lunch:"दुपहर दा खाणा",snack:"शाम दा नाश्ता",dinner:"रात दा खाणा",fasting:"व्रत",grocery:"दुकान सूची",week:"हफ्ता",day:"दिन",plan:"योजना",print:"छापो"}},
+  "Manipur":{name:"মৈতৈলোন্",code:"mni",labels:{breakfast:"চাকথংদা",lunch:"নিংথৌ চাকথং",snack:"মরুপ চাকথং",dinner:"নুমিত্ চাকথং",fasting:"উপবাস",grocery:"কিরাণা লিস্ট",week:"চাউথোক",day:"নুমিত্",plan:"পরিকল্পনা",print:"ছাপো"}},
+  "Meghalaya":{name:"Khasi",code:"kha",labels:{breakfast:"Jingshah Sym",lunch:"Jingshong Sym",snack:"Jing Kpoh Sym",dinner:"Jingsah Sym",fasting:"Fasting",grocery:"Grocery List",week:"Sngi ki Haïñ",day:"Sngi",plan:"Plan",print:"Print"}},
+  "Mizoram":{name:"Mizo",code:"lus",labels:{breakfast:"Zingkar lehkha",lunch:"Chawhnu lehkha",snack:"Chhun chhung",dinner:"Zanlai lehkha",fasting:"Fasting",grocery:"Lei list",week:"Zak",day:"Ni",plan:"Plan",print:"Print"}},
+  "Nagaland":{name:"Nagamese",code:"nag",labels:{breakfast:"Bihaner khabar",lunch:"Dupurer khabar",snack:"Bikaler khabar",dinner:"Raatir khabar",fasting:"Fasting",grocery:"Grocery list",week:"Hapta",day:"Din",plan:"Plan",print:"Print"}},
+  "Arunachal Pradesh":{name:"Hindi",code:"hi",labels:{breakfast:"सुबह का नाश्ता",lunch:"दोपहर का खाना",snack:"शाम का नाश्ता",dinner:"रात का खाना",fasting:"व्रत",grocery:"किराना सूची",week:"सप्ताह",day:"दिन",plan:"योजना",print:"छापें"}},
+  "Tripura":{name:"বাংলা",code:"bn",labels:{breakfast:"সকালের খাবার",lunch:"দুপুরের খাবার",snack:"বিকেলের জলখাবার",dinner:"রাতের খাবার",fasting:"উপবাস",grocery:"মুদিখানার তালিকা",week:"সপ্তাহ",day:"দিন",plan:"পরিকল্পনা",print:"ছাপুন"}},
+  "Sikkim":{name:"नेपाली",code:"ne",labels:{breakfast:"बिहानको खाजा",lunch:"दिउँसोको खाना",snack:"बेलुकाको खाजा",dinner:"रातको खाना",fasting:"उपवास",grocery:"किराना सूची",week:"हप्ता",day:"दिन",plan:"योजना",print:"छाप्नुहोस्"}}
+};
+
+// ═══════════ DIET FILTERING ═══════════
+const DIET_FILTER={
+  nonveg:()=>true,
+  veg:(m)=>{const t=((m.m||'')+(m.s||'')).toLowerCase();return!t.match(/chicken|fish|mutton|prawn|meat|lamb|beef|pork|shrimp|crab|lobster|seafood|egg|omelette/i);},
+  eggetarian:(m)=>{const t=((m.m||'')+(m.s||'')).toLowerCase();return!t.match(/chicken|fish|mutton|prawn|meat|lamb|beef|pork|shrimp|crab|lobster|seafood/i);},
+  vegan:(m)=>{const t=((m.m||'')+(m.s||'')).toLowerCase();return!t.match(/chicken|fish|mutton|prawn|meat|lamb|beef|pork|shrimp|crab|seafood|egg|omelette|paneer|ghee|butter|dahi|curd|milk|dairy|cream|cheese|kheer|lassi/i);},
+  jain:(m)=>{const t=((m.m||'')+(m.s||'')).toLowerCase();return!t.match(/chicken|fish|mutton|prawn|meat|seafood|egg|onion|garlic|potato|aloo|carrot|radish|beetroot|turnip/i);},
+  diabetic:(m)=>{const t=((m.m||'')+(m.s||'')).toLowerCase();return!t.match(/sugar|jalebi|halwa|kheer|payasam|gulab|laddoo|barfi|sweet pongal|biryani|puri|bhature/i);}
+};
+
+const DIET_VEG_ALTS={
+  veg:["Paneer Masala","Dal Tadka","Mixed Veg Curry","Soya Chunks Curry","Mushroom Sabzi","Aloo Gobi","Palak Paneer","Egg Curry","Rajma"],
+  eggetarian:["Egg Curry","Scrambled Eggs","Masala Omelette","Paneer Masala","Dal Fry","Egg Bhurji","Mixed Veg Curry"],
+  vegan:["Dal Tadka (no ghee)","Mushroom Stir Fry","Soya Curry","Aloo Gobi","Rajma","Mixed Veg Curry","Chana Masala","Tofu Sabzi"],
+  jain:["Paneer Masala (no onion)","Dal Fry (no onion/garlic)","Lauki Sabzi","Raw Banana Curry","Dudhi Kofta","Patta Gobi Sabzi"],
+  diabetic:["Grilled Chicken + Salad","Moong Dal Chilla","Ragi Dosa","Steamed Fish + Vegetables","Egg White Omelette","Dal + Vegetables (less rice)"]
+};
+
+// ═══════════ BUDGET DATA ═══════════
+// Per-person per-day cost in INR by cluster and tier
+const BUDGET_BASE={
+  sc:{budget:{bf:30,lu:70,sn:20,di:50},mid:{bf:55,lu:130,sn:35,di:90},premium:{bf:90,lu:220,sn:60,di:150}},
+  np:{budget:{bf:35,lu:75,sn:25,di:55},mid:{bf:60,lu:140,sn:40,di:95},premium:{bf:100,lu:240,sn:65,di:160}},
+  wc:{budget:{bf:30,lu:80,sn:20,di:55},mid:{bf:55,lu:150,sn:35,di:95},premium:{bf:95,lu:260,sn:65,di:165}},
+  east:{budget:{bf:28,lu:65,sn:18,di:48},mid:{bf:50,lu:120,sn:30,di:85},premium:{bf:85,lu:200,sn:55,di:140}},
+  cen:{budget:{bf:28,lu:65,sn:18,di:48},mid:{bf:50,lu:120,sn:30,di:85},premium:{bf:85,lu:200,sn:55,di:140}},
+  him:{budget:{bf:32,lu:70,sn:22,di:52},mid:{bf:58,lu:130,sn:38,di:90},premium:{bf:95,lu:215,sn:60,di:150}}
+};
+// Diet modifier (veg costs less, premium non-veg costs more)
+const DIET_BUDGET_MOD={nonveg:1.0,veg:0.78,eggetarian:0.82,vegan:0.75,jain:0.80,diabetic:0.90};
+// Eat-out adds cost
+const EATOUT_COST={never:0,weekend:600,weekly:400,twice:800};
+
+// ═══════════ PREP TIME DATA ═══════════
+const PREP_TIME={
+  // Quick = <15 min, medium = 15–35 min, slow = 35+ min
+  "Idli":"quick","Masala Dosa":"medium","Ven Pongal":"medium","Idiyappam":"medium",
+  "Rava Upma":"quick","Poori":"medium","Appam":"slow","Ragi Dosa":"medium",
+  "Puttu":"medium","Uthappam":"medium","Adai":"medium","Bread Omelette":"quick",
+  "Aloo Paratha":"medium","Chole Bhature":"slow","Methi Paratha":"medium","Poha":"quick",
+  "Besan Cheela":"quick","Moong Dal Chilla":"quick","Gobhi Paratha":"medium",
+  "Country Chicken Kuzhambu":"slow","Sambar Sadam":"medium","Meen Kulambu":"slow",
+  "Keerai Masiyal":"medium","Mor Kuzhambu":"medium","Chicken Biryani":"slow",
+  "Puliyodarai":"medium","Curd Rice":"quick","Rasam Sadam":"medium",
+  "Dal Makhani":"slow","Paneer Butter Masala":"medium","Chicken Curry":"slow",
+  "Rajma Chawal":"slow","Palak Paneer":"medium","Chole":"medium","Kadhi Chawal":"medium",
+  "Sarson Da Saag":"slow","Fish Curry":"medium","Prawn Masala":"medium",
+  "Roti":"quick","Khichdi":"quick","Chapathi":"quick","Dal Fry":"medium","Phulka":"quick",
+  "Macher Jhol":"medium","Chingri Malai Curry":"medium","Posto Aloo":"medium",
+  "Dal Baati Churma":"slow","Gatte Ki Sabzi":"medium","Undhiyu":"slow",
+  "Madra (Chana)":"slow","Dham":"slow","Trout Fish Curry":"medium",
+};
+const PREP_LABELS={quick:{t:"⚡ 15 min",cls:"quick"},medium:{t:"🕐 30 min",cls:"medium"},slow:{t:"🍲 45+ min",cls:"slow"}};
+
+// ═══════════ SEASON DATA ═══════════
+const SEASONS={
+  summer:{months:[3,4,5],icon:"☀️",text:"Summer — Light, cooling meals recommended. Prioritize curd, lemon, coconut water.",cls:"summer"},
+  monsoon:{months:[6,7,8,9],icon:"🌧️",text:"Monsoon — Avoid raw salads. Hot soups, roasted snacks & ginger-heavy dishes recommended.",cls:"monsoon"},
+  winter:{months:[11,12,1,2],icon:"🧥",text:"Winter — Hearty warming meals. Millets, ghee, jaggery & sesame-rich dishes ideal.",cls:"winter"},
+  spring:{months:[10],icon:"🌸",text:"Festive season — Navratri, Diwali nearby. Special sweets & celebratory thalis expected!",cls:"spring"}
+};
+
+// ═══════════ RECIPES DATABASE ═══════════
+const RECIPES={
+"Idli":{ing:[{a:"2 cups",n:"Idli rice (par-boiled)"},{a:"½ cup",n:"Urad dal (split black gram)"},{a:"½ tsp",n:"Fenugreek seeds"},{a:"1 tsp",n:"Salt"},{a:"Water",n:"as needed"}],steps:["Soak rice and fenugreek separately for 6 hrs; soak urad dal separately for 4 hrs.","Grind urad dal first with minimal water until light and fluffy (8–10 min).","Grind rice coarsely. Mix both batters, add salt, and ferment overnight (8–12 hrs).","Pour batter into greased idli moulds. Steam for 10–12 minutes on medium flame.","Insert a toothpick — if it comes out clean, idlis are done. Rest 2 min before unmoulding."],tip:"Fermented batter in a warm spot gives softer, more airy idlis."},
+
+"Masala Dosa":{ing:[{a:"2 cups",n:"Dosa rice"},{a:"½ cup",n:"Urad dal"},{a:"3",n:"Potatoes (boiled, mashed)"},{a:"1",n:"Onion (sliced)"},{a:"1 tsp",n:"Mustard seeds"},{a:"10",n:"Curry leaves"},{a:"½ tsp",n:"Turmeric"},{a:"2",n:"Green chillies"},{a:"2 tbsp",n:"Oil"}],steps:["Prepare dosa batter (same as idli batter) and ferment overnight.","Make filling: splutter mustard seeds in oil, add curry leaves, onion, green chillies. Sauté till soft.","Add turmeric and mashed potatoes. Mix well, cook 3–4 min. Set aside.","Heat a flat griddle (tawa). Pour a ladle of batter and spread in circular motion into a thin crepe.","Drizzle oil on edges and cook until golden and crispy. Add potato filling on one side, fold, and serve."],tip:"Rub the tawa with half an onion between dosas to prevent sticking."},
+
+"Ven Pongal":{ing:[{a:"1 cup",n:"Raw rice"},{a:"½ cup",n:"Moong dal (yellow)"},{a:"2 tbsp",n:"Ghee"},{a:"1 tsp",n:"Cumin seeds"},{a:"1 tsp",n:"Black pepper (whole)"},{a:"1 inch",n:"Ginger (grated)"},{a:"10",n:"Curry leaves"},{a:"8",n:"Cashews"},{a:"1 tsp",n:"Salt"},{a:"3.5 cups",n:"Water"}],steps:["Dry roast moong dal until lightly golden. Wash rice and dal together.","Pressure cook rice and dal with water and salt for 4–5 whistles until very soft and mushy.","Heat ghee in a small pan. Fry cashews until golden, then add cumin, pepper, curry leaves, ginger.","Pour the tempering over the cooked pongal and mix well. Adjust salt.","Serve hot with coconut chutney and sambar."],tip:"The pongal should be slightly runny when hot — it thickens as it cools."},
+
+"Sambar Sadam":{ing:[{a:"1 cup",n:"Rice"},{a:"½ cup",n:"Toor dal"},{a:"2 cups",n:"Mixed vegetables (drumstick, brinjal, tomato)"},{a:"2 tbsp",n:"Sambar powder"},{a:"1 lemon-sized",n:"Tamarind"},{a:"1 tsp",n:"Mustard seeds"},{a:"½ tsp",n:"Asafoetida (hing)"},{a:"2 tbsp",n:"Oil"},{a:"Salt",n:"to taste"}],steps:["Cook toor dal with water until soft. Mash it well.","Soak tamarind in hot water, extract juice. Cook vegetables in tamarind water until soft.","Add dal to vegetables. Add sambar powder, salt, hing. Simmer 10 min.","Temper: splutter mustard seeds and curry leaves in oil. Pour into sambar.","Serve sambar mixed with hot rice. A one-pot comfort meal."],tip:"Drum stick (murungakkai) is the soul of any good sambar — don't skip it."},
+
+"Aloo Paratha":{ing:[{a:"2 cups",n:"Whole wheat flour"},{a:"3 large",n:"Potatoes (boiled, mashed)"},{a:"1 tsp",n:"Cumin seeds"},{a:"1 tsp",n:"Red chilli powder"},{a:"½ tsp",n:"Amchur (dry mango powder)"},{a:"2",n:"Green chillies (finely chopped)"},{a:"2 tbsp",n:"Coriander leaves"},{a:"Salt",n:"to taste"},{a:"Butter/ghee",n:"for cooking"}],steps:["Knead flour with warm water and a pinch of salt into a smooth, soft dough. Rest 20 min.","Mix mashed potatoes with all spices, chillies and coriander. Divide into equal portions.","Roll a dough ball into a 4-inch disc. Place filling in centre, gather edges and seal.","Gently roll out again into a flat paratha (don't press too hard or filling bursts).","Cook on a hot tawa with butter/ghee until golden brown spots appear on both sides."],tip:"The dough should be softer than chapati dough for the best texture."},
+
+"Poha":{ing:[{a:"2 cups",n:"Thick poha (flattened rice)"},{a:"1",n:"Onion (finely chopped)"},{a:"1",n:"Potato (small, diced)"},{a:"1 tsp",n:"Mustard seeds"},{a:"8",n:"Curry leaves"},{a:"2",n:"Green chillies"},{a:"½ tsp",n:"Turmeric"},{a:"2 tbsp",n:"Oil"},{a:"½",n:"Lemon"},{a:"Coriander",n:"for garnish"},{a:"Salt",n:"to taste"}],steps:["Rinse poha in a colander under running water for 30 seconds. Let it drain and soften (don't soak).","Heat oil. Splutter mustard seeds, add curry leaves, green chillies, onion. Sauté until pink.","Add diced potato, cook covered 5 min until tender. Add turmeric.","Add softened poha, salt, and mix gently. Cook 2–3 min on low heat.","Squeeze lemon juice, garnish with coriander and sev. Serve hot."],tip:"Don't over-rinse poha or it'll become mushy. Just a quick rinse is enough."},
+
+"Chole Bhature":{ing:[{a:"2 cups",n:"Kabuli chana (dried chickpeas)"},{a:"2",n:"Onions (chopped)"},{a:"3",n:"Tomatoes (chopped)"},{a:"1 tbsp",n:"Ginger-garlic paste"},{a:"2 tsp",n:"Chole masala"},{a:"1 tsp",n:"Cumin seeds"},{a:"1",n:"Bay leaf"},{a:"2 cups",n:"Maida (for bhature)"},{a:"¼ cup",n:"Yoghurt"},{a:"Oil",n:"for frying"}],steps:["Soak chickpeas overnight. Pressure cook with a tea bag for dark colour — 6 whistles.","Cook onions in oil until deep golden. Add ginger-garlic paste, cook 2 min.","Add tomatoes, cook until oil separates. Add all spices including chole masala.","Add cooked chickpeas with some cooking water. Simmer 15 min until thick and flavourful.","For bhature: knead maida with yoghurt, oil and salt. Rest 1 hr. Roll and deep fry until puffed."],tip:"Adding a used tea bag while pressure cooking chickpeas gives them that authentic dark colour."},
+
+"Dal Makhani":{ing:[{a:"1 cup",n:"Whole black urad dal"},{a:"¼ cup",n:"Rajma (kidney beans)"},{a:"2",n:"Tomatoes (pureed)"},{a:"1",n:"Onion (finely chopped)"},{a:"1 tbsp",n:"Ginger-garlic paste"},{a:"2 tbsp",n:"Butter"},{a:"¼ cup",n:"Fresh cream"},{a:"1 tsp",n:"Red chilli powder"},{a:"1 tsp",n:"Garam masala"},{a:"Salt",n:"to taste"}],steps:["Soak urad dal and rajma overnight. Pressure cook for 8 whistles until completely soft.","Heat butter in a pan. Add ginger-garlic paste, cook 2 min. Add onions, cook golden.","Add tomato puree and all spices. Cook until oil separates and masala deepens in colour.","Mash half the cooked dal lightly, add everything to the masala. Simmer on very low heat.","Add cream, stir gently, and simmer for at least 20–30 min — longer is always better."],tip:"The secret is slow-cooking. Real dhaba dal makhani simmers for 6–8 hours!"},
+
+"Paneer Butter Masala":{ing:[{a:"300g",n:"Paneer (cubed)"},{a:"3",n:"Tomatoes (pureed)"},{a:"1",n:"Onion (chopped)"},{a:"1 tbsp",n:"Cashews (soaked)"},{a:"1 tbsp",n:"Ginger-garlic paste"},{a:"2 tbsp",n:"Butter"},{a:"¼ cup",n:"Fresh cream"},{a:"1 tsp",n:"Kashmiri red chilli powder"},{a:"1 tsp",n:"Garam masala"},{a:"1 tsp",n:"Sugar"},{a:"Salt",n:"to taste"}],steps:["Blend tomatoes, onion and soaked cashews together into a smooth puree.","Heat butter. Add ginger-garlic paste, cook 1 min. Add pureed mixture.","Cook the gravy for 12–15 min until it thickens and the oil separates.","Add Kashmiri chilli, garam masala, sugar and salt. Mix well.","Add paneer cubes and cream. Simmer 5 min on low heat. Garnish with cream swirl."],tip:"Kashmiri red chilli gives the signature bright orange colour without too much heat."},
+
+"Rajma Chawal":{ing:[{a:"1.5 cups",n:"Red kidney beans (rajma)"},{a:"2",n:"Onions (finely chopped)"},{a:"3",n:"Tomatoes (chopped)"},{a:"1 tbsp",n:"Ginger-garlic paste"},{a:"1 tsp",n:"Cumin seeds"},{a:"1 tsp",n:"Coriander powder"},{a:"1 tsp",n:"Red chilli powder"},{a:"½ tsp",n:"Garam masala"},{a:"2 tbsp",n:"Oil"},{a:"Salt",n:"to taste"}],steps:["Soak rajma overnight. Pressure cook for 6–8 whistles until completely soft.","Heat oil, splutter cumin. Add onions and fry deep golden (10–12 min — don't rush this).","Add ginger-garlic paste. Cook 2 min. Add tomatoes and cook until mushy.","Add all spices, cook 5 min. Add rajma with its water. Mash some beans to thicken.","Simmer 15–20 min until thick and hearty. Serve with steamed basmati rice."],tip:"Take time with the onions — deep golden onions are the base of great rajma."},
+
+"Palak Paneer":{ing:[{a:"3 cups",n:"Spinach leaves (palak)"},{a:"200g",n:"Paneer (cubed)"},{a:"1",n:"Onion (chopped)"},{a:"2",n:"Tomatoes (chopped)"},{a:"1 tbsp",n:"Ginger-garlic paste"},{a:"½ tsp",n:"Cumin seeds"},{a:"1 tsp",n:"Garam masala"},{a:"¼ cup",n:"Cream or cashew paste"},{a:"2 tbsp",n:"Oil"},{a:"Salt",n:"to taste"}],steps:["Blanch spinach in boiling water for 2 min, then immediately dip in ice water. Blend smooth.","Lightly pan-fry paneer cubes in oil until golden. Keep aside.","Sauté cumin, onion until golden. Add ginger-garlic paste, cook 2 min. Add tomatoes.","Cook masala until oil separates. Add spinach puree and all spices. Simmer 5 min.","Add paneer and cream. Simmer 3–4 min. Don't overcook — keep the green vibrant."],tip:"The ice bath after blanching keeps spinach bright green and prevents discolouration."},
+
+"Chicken Curry":{ing:[{a:"800g",n:"Chicken (curry cut)"},{a:"2",n:"Onions (finely chopped)"},{a:"3",n:"Tomatoes (chopped)"},{a:"1 tbsp",n:"Ginger-garlic paste"},{a:"1 tsp",n:"Turmeric"},{a:"2 tsp",n:"Coriander powder"},{a:"1 tsp",n:"Red chilli powder"},{a:"1 tsp",n:"Garam masala"},{a:"¼ cup",n:"Yoghurt"},{a:"3 tbsp",n:"Oil"},{a:"Salt",n:"to taste"}],steps:["Marinate chicken with yoghurt, turmeric, and half the spices for at least 30 min.","Heat oil. Fry onions deep golden — this is critical for flavour depth.","Add ginger-garlic paste, cook 2 min. Add tomatoes and cook until oil separates.","Add remaining spices. Add marinated chicken. Sear on high heat 5 min.","Add water, cover and simmer 20–25 min until chicken is tender. Finish with garam masala."],tip:"Don't skip the marination — even 30 minutes makes the chicken far more tender and flavourful."},
+
+"Fish Curry":{ing:[{a:"500g",n:"Fish fillets (seer or mackerel)"},{a:"1 cup",n:"Coconut milk"},{a:"2",n:"Tomatoes (chopped)"},{a:"1 tsp",n:"Turmeric"},{a:"1 tsp",n:"Red chilli powder"},{a:"½ tsp",n:"Coriander powder"},{a:"1 tbsp",n:"Ginger (grated)"},{a:"10",n:"Curry leaves"},{a:"2 tbsp",n:"Coconut oil"},{a:"Salt",n:"to taste"}],steps:["Marinate fish with turmeric, red chilli powder and salt for 15 min.","Heat coconut oil, add curry leaves. Add ginger and cook 1 min.","Add tomatoes and cook until soft. Add all spice powders, cook 2 min.","Add coconut milk, bring to a simmer (do not boil hard or it will curdle).","Gently slide in fish pieces. Simmer on low heat 8–10 min. Do not stir — shake the pan."],tip:"Shake the pan instead of stirring to keep fish pieces intact."},
+
+"Khichdi":{ing:[{a:"1 cup",n:"Rice"},{a:"½ cup",n:"Moong dal (yellow)"},{a:"1 tsp",n:"Cumin seeds"},{a:"½ tsp",n:"Turmeric"},{a:"1 tbsp",n:"Ghee"},{a:"1 inch",n:"Ginger (grated)"},{a:"2 cups",n:"Water (extra for soft texture)"},{a:"Salt",n:"to taste"}],steps:["Wash rice and dal together. Soak for 20 min for quicker cooking.","Heat ghee in pressure cooker. Add cumin seeds, ginger. Sauté 1 min.","Add drained rice and dal. Stir 2 min to coat in ghee.","Add water, turmeric and salt. Pressure cook for 3–4 whistles.","Let pressure release naturally. Serve with extra ghee on top."],tip:"Use 1:3 rice-to-water ratio for soft flowing khichdi — it should have a porridge-like consistency."},
+
+"Curd Rice":{ing:[{a:"2 cups",n:"Cooked rice (cooled)"},{a:"1.5 cups",n:"Plain thick curd"},{a:"½ cup",n:"Milk"},{a:"1 tsp",n:"Mustard seeds"},{a:"10",n:"Curry leaves"},{a:"2",n:"Dry red chillies"},{a:"1 tbsp",n:"Urad dal"},{a:"1 tbsp",n:"Oil"},{a:"Salt",n:"to taste"},{a:"Coriander",n:"for garnish"}],steps:["Mash cooled rice lightly. Mix with curd and milk until creamy. The milk prevents it from getting too sour.","Add salt to taste. Check consistency — it should be soft and spreadable.","Heat oil. Splutter mustard seeds, add urad dal, fry until golden.","Add curry leaves and dry red chillies. Turn off heat immediately.","Pour tempering over curd rice. Mix, garnish with coriander and serve."],tip:"Adding milk keeps the curd rice from turning overly sour — a must for packed lunch boxes."},
+
+"Dhokla":{ing:[{a:"1.5 cups",n:"Besan (gram flour)"},{a:"1 tbsp",n:"Rava (semolina)"},{a:"¾ cup",n:"Yoghurt"},{a:"1 tsp",n:"Ginger paste"},{a:"1 tsp",n:"Lemon juice"},{a:"1 tsp",n:"Eno fruit salt"},{a:"1 tsp",n:"Sugar"},{a:"Salt",n:"to taste"},{a:"1 tbsp",n:"Oil + mustard seeds + curry leaves (for tempering)"}],steps:["Mix besan, rava, yoghurt, ginger, lemon juice, sugar and salt into a smooth batter. Rest 15 min.","Grease a flat plate or dhokla tin. Prepare a steamer.","Add Eno to the batter just before steaming. Mix quickly — it will froth up.","Pour batter into tin immediately and steam for 15–18 min.","Let cool slightly, cut into squares. Temper with oil, mustard seeds and curry leaves."],tip:"Add Eno and pour into the steamer within 60 seconds — the faster you work, the fluffier the dhokla."},
+
+"Macher Jhol":{ing:[{a:"500g",n:"Rohu fish (sliced)"},{a:"2",n:"Potatoes (cubed)"},{a:"1 tsp",n:"Turmeric"},{a:"1 tsp",n:"Cumin seeds"},{a:"1 tsp",n:"Coriander powder"},{a:"2",n:"Green chillies"},{a:"2 tbsp",n:"Mustard oil"},{a:"Salt",n:"to taste"}],steps:["Marinate fish with turmeric and salt for 10 min.","Shallow fry fish in mustard oil until golden on both sides. Remove and keep aside.","In the same oil, add cumin seeds, fry potatoes until half cooked.","Add turmeric, coriander powder, green chillies. Add water and bring to a boil.","Add fried fish gently. Simmer 10–12 min until potatoes are soft. Serve with rice."],tip:"Always cook Bengali fish curry in mustard oil — it's essential for the authentic flavour."},
+
+"Sabudana Khichdi":{ing:[{a:"1.5 cups",n:"Sabudana (sago pearls)"},{a:"½ cup",n:"Peanuts (roasted, coarsely ground)"},{a:"2",n:"Potatoes (diced, boiled)"},{a:"2",n:"Green chillies"},{a:"1 tsp",n:"Cumin seeds"},{a:"1 tbsp",n:"Ghee"},{a:"½",n:"Lemon"},{a:"1 tsp",n:"Sugar"},{a:"Salt / sendha namak",n:"to taste"}],steps:["Wash sabudana, then soak in just enough water to cover for 4–6 hours. It should be non-sticky when ready.","Heat ghee. Add cumin seeds, green chillies, sauté 30 seconds.","Add boiled potato cubes. Cook 3 min until slightly crispy.","Add soaked sabudana, peanuts, sugar, and salt. Stir gently.","Cook 5–7 min on medium heat, stirring occasionally. Squeeze lemon and serve."],tip:"Don't over-soak sabudana — drain it well. Wet, clumped sabudana is the biggest mistake."},
+
+"Poori":{ing:[{a:"2 cups",n:"Whole wheat flour"},{a:"1 tbsp",n:"Semolina (rava)"},{a:"1 tbsp",n:"Oil"},{a:"½ tsp",n:"Salt"},{a:"Water",n:"as needed (for stiff dough)"},{a:"Oil",n:"for deep frying"}],steps:["Mix flour, rava, oil and salt. Knead with minimal water into a stiff, tight dough.","Rest the dough for 20 min covered. It will soften slightly.","Divide into small balls. Roll each into a round 3–4 inch disc — even thickness is key.","Heat oil until very hot (test with a small dough piece — it should rise immediately).","Fry pooris one at a time. Press gently with a slotted spoon to help them puff. Turn once."],tip:"Stiff dough = puffed pooris. Soft dough leads to flat, oil-absorbing ones."},
+
+"Dal Baati Churma":{ing:[{a:"2 cups",n:"Coarse wheat flour (for baati)"},{a:"½ cup",n:"Ghee (for baati + topping)"},{a:"1 cup",n:"Mixed dals (toor, chana, moong)"},{a:"1 tsp",n:"Cumin seeds"},{a:"1 tsp",n:"Coriander powder"},{a:"1 tsp",n:"Red chilli powder"},{a:"½ tsp",n:"Hing (asafoetida)"},{a:"Salt",n:"to taste"},{a:"1 cup",n:"Whole wheat flour + jaggery + ghee (churma)"}],steps:["Mix wheat flour with ghee, salt and enough water to make a stiff dough. Shape into round balls.","Bake baatis in a preheated oven at 200°C for 25–30 min until golden and cooked through.","Break open baatis, douse generously with melted ghee.","Cook mixed dals until soft. Temper with ghee, cumin, hing, and spices.","For churma: bake leftover dough, crush, mix with jaggery and ghee. Serve all three together."],tip:"Traditional baatis are cooked over cow dung fire — the oven version is the next best thing!"},
+
+"Luchi":{ing:[{a:"2 cups",n:"Maida (refined flour)"},{a:"1 tbsp",n:"Oil or ghee"},{a:"½ tsp",n:"Salt"},{a:"Water",n:"as needed for soft dough"},{a:"Oil",n:"for deep frying"}],steps:["Mix maida, oil and salt. Knead with water into a soft, smooth dough (softer than puri dough).","Rest covered for 30 min. This is important for soft luchis.","Divide into small balls. Roll out into thin, even discs.","Heat oil until hot but not smoking. Slide in luchi gently.","Press with a slotted spoon to help it puff up. Flip when golden underneath. Cook 30 sec more."],tip:"Maida (not atta) is non-negotiable for authentic Bengali luchi — the softness depends on it."},
+
+"Roti":{ing:[{a:"2 cups",n:"Whole wheat atta"},{a:"½ tsp",n:"Salt"},{a:"Water",n:"as needed"},{a:"Ghee",n:"for finishing"}],steps:["Add salt to flour. Slowly add water and knead into a soft, smooth dough (softer than paratha).","Rest covered for 30 min — this is essential for soft rotis.","Divide into equal balls. Roll out evenly into 6–7 inch rounds.","Cook on a hot tawa on medium-high. Flip when bubbles form (about 45 seconds).","Place directly on flame for a few seconds to puff up. Finish with ghee."],tip:"The resting time for the dough is the biggest secret to soft, pliable rotis."},
+
+"Chicken Biryani":{ing:[{a:"1 kg",n:"Chicken (curry cut)"},{a:"3 cups",n:"Basmati rice (soaked 30 min)"},{a:"3",n:"Onions (sliced, for fried onions)"},{a:"1 cup",n:"Yoghurt"},{a:"2 tbsp",n:"Biryani masala"},{a:"1 tsp",n:"Saffron (soaked in warm milk)"},{a:"Whole spices",n:"(bay leaf, cardamom, cloves, cinnamon)"},{a:"4 tbsp",n:"Ghee"},{a:"Salt",n:"to taste"}],steps:["Fry onions in oil until deep golden and crispy. Drain on paper. This is 'birista'.","Marinate chicken with yoghurt, biryani masala, half the birista, and salt. Rest 1 hr.","Parboil rice with whole spices and salt until 70% cooked (rice should still have a bite).","Layer: cooked chicken at bottom, then rice, then saffron milk, then birista and ghee.","Seal the pot with foil and lid. Cook on high 5 min, then very low 25 min (dum cooking)."],tip:"The dum (steam sealing) step is what makes biryani — don't lift the lid during this time."},
+
+"Pongal":{ing:[{a:"1 cup",n:"Raw rice"},{a:"½ cup",n:"Moong dal"},{a:"2 tbsp",n:"Ghee"},{a:"1 tbsp",n:"Jaggery (for sweet version)"},{a:"¼ cup",n:"Coconut (grated)"},{a:"¼ cup",n:"Cashews"},{a:"½ tsp",n:"Cardamom powder"},{a:"Milk",n:"1 cup (optional)"}],steps:["Dry roast moong dal until a nutty aroma comes. Wash with rice.","Cook rice and dal with water (and milk for richer version) until very soft and mushy.","Heat ghee. Fry cashews until golden. Add grated coconut and fry 1 min.","Add jaggery to the cooked pongal. Mix well over low heat until jaggery dissolves.","Add cardamom and fried cashews. Mix. Serve warm as a festive offering."],tip:"Sweet pongal should be loose when hot — it firms up as it cools."},
+
+"Upma":{ing:[{a:"1.5 cups",n:"Rava (semolina)"},{a:"1",n:"Onion (chopped)"},{a:"2",n:"Green chillies"},{a:"1 tsp",n:"Mustard seeds"},{a:"1 tsp",n:"Urad dal"},{a:"10",n:"Curry leaves"},{a:"2.5 cups",n:"Water (boiling)"},{a:"2 tbsp",n:"Oil"},{a:"Salt",n:"to taste"},{a:"Coriander",n:"for garnish"}],steps:["Dry roast rava on medium heat until it smells toasty and changes colour slightly. Set aside.","Heat oil. Splutter mustard seeds, fry urad dal until golden, add curry leaves and chillies.","Add onion, sauté until translucent. Pour boiling water carefully — it will splutter.","Add salt. When water boils, add rava in a steady stream while stirring constantly.","Stir vigorously to avoid lumps. Cover and cook 3 min on low. Garnish and serve."],tip:"Add rava to boiling water (not the other way around) for smooth, lump-free upma."},
+
+"Vada":{ing:[{a:"1 cup",n:"Urad dal (soaked 4 hrs)"},{a:"1 inch",n:"Ginger"},{a:"2",n:"Green chillies"},{a:"10",n:"Curry leaves (torn)"},{a:"½ tsp",n:"Pepper"},{a:"Salt",n:"to taste"},{a:"Oil",n:"for deep frying"}],steps:["Drain soaked urad dal. Grind to a thick, fluffy batter with minimal water. Ginger and chillies too.","Add curry leaves, pepper and salt. The batter should be very thick and hold shape.","Wet your hands. Scoop a ball of batter, flatten into a ring shape with a hole in the centre.","Heat oil until very hot. Slide vadas in gently. Fry on medium heat 3–4 min per side.","Fry until deep golden and crispy. Drain and serve with sambar and chutney."],tip:"The batter should be so thick it doesn't flow when you tilt the bowl — that's the key to crispy vadas."},
+
+"Appam":{ing:[{a:"2 cups",n:"Raw rice (soaked 4 hrs)"},{a:"½ cup",n:"Cooked rice"},{a:"¼ cup",n:"Coconut (grated)"},{a:"½ tsp",n:"Yeast or ½ cup toddy"},{a:"1 tsp",n:"Sugar"},{a:"Salt",n:"to taste"},{a:"Water",n:"as needed"}],steps:["Grind soaked raw rice, cooked rice and coconut with water to a smooth batter.","Add yeast dissolved in warm water with sugar. Mix, ferment overnight.","Next morning, add salt. Batter should have risen and smell slightly tangy.","Heat an appam chatty (curved pan). Pour a ladle of batter, swirl to coat sides.","Cover and cook 2 min. The centre should be soft and spongy, edges lacy and crisp."],tip:"The curved pan is essential — you can't make proper appam in a flat tawa."},
+
+"Idiyappam":{ing:[{a:"2 cups",n:"Rice flour (idiyappam flour)"},{a:"1 tsp",n:"Salt"},{a:"2.5 cups",n:"Boiling water"},{a:"1 tsp",n:"Oil"},{a:"Coconut",n:"for serving"}],steps:["Mix rice flour and salt. Pour boiling water gradually while mixing with a spoon.","Once cool enough to touch, knead into a smooth, soft dough. Add oil.","Fill the idiyappam press/mould with dough. Press onto greased idli plates in circular motion.","Steam for 7–8 min. The strands should become slightly translucent when done.","Serve with coconut milk, vegetable stew, or coconut chutney."],tip:"The dough must be kneaded while still warm — it hardens when cold and won't press smoothly."},
+
+"Misal Pav":{ing:[{a:"1 cup",n:"Sprouted moth beans (matki)"},{a:"1",n:"Onion (chopped)"},{a:"2",n:"Tomatoes (chopped)"},{a:"2 tsp",n:"Kolhapuri or misal masala"},{a:"1 tbsp",n:"Oil"},{a:"Pav",n:"(bread rolls) for serving"},{a:"Sev, onion, coriander",n:"for topping"},{a:"½ cup",n:"Coconut + red chilli gravy (kat)"}],steps:["Cook sprouted matki with salt and turmeric in a pressure cooker for 2 whistles.","Make kat: grind coconut and red chillies. Cook with oil and masala until oil floats.","In another pan, sauté onion and tomatoes. Add matki and kat. Simmer 10 min.","The spicy runny gravy is the kat — it should be pourable and fiery.","Serve: put matki usal in bowl, ladle kat over, top with sev, onion, coriander. Serve with buttered pav."],tip:"Misal is ALL about the spicy kat (gravy) — make it generously and make it hot!"},
+
+"Thepla":{ing:[{a:"1 cup",n:"Whole wheat flour"},{a:"½ cup",n:"Fresh methi (fenugreek) leaves"},{a:"¼ cup",n:"Besan"},{a:"½ cup",n:"Yoghurt"},{a:"1 tsp",n:"Turmeric"},{a:"1 tsp",n:"Red chilli powder"},{a:"1 tsp",n:"Coriander powder"},{a:"2 tbsp",n:"Oil"},{a:"Salt",n:"to taste"}],steps:["Mix all flours, spices, and methi leaves together. Add yoghurt and oil.","Knead into a soft, pliable dough without adding extra water (yoghurt provides moisture).","Divide into balls. Roll thinly into 5–6 inch rounds.","Cook on a hot tawa on medium heat, pressing with a cloth. Flip twice.","Apply oil both sides. Cook until golden spots appear. Store well — lasts 3 days."],tip:"Theplas are a great travel food — the methi acts as a natural preservative."},
+};
+
+// ═══════════ STATE ═══════════
+let selState=null,selCluster=null,selDiet='nonveg',curLang='en',budgetTier='mid';
+let persons=[{name:"",restriction:"",birthday:"",role:"Adult"}];
+let pets=[];
+let planData=[],curView='week',curWeek=0,totWeeks=4;
+let opts={fasting:false,festival:false,snacks:false,hydration:false,leftover:false,petmeal:false};
+let eatFreq='weekend',eatPref='';
+let checks=new Set(),swaps={},curGTab='family';
+
+const MN=["January","February","March","April","May","June","July","August","September","October","November","December"];
+
+// ═══════════ ZONE MAP ═══════════
+const ZONE_MAP={
+  south:["Tamil Nadu","Kerala","Andhra Pradesh","Telangana","Karnataka","Puducherry"],
+  west:["Goa","Maharashtra"],
+  north:["Punjab","Haryana","Uttar Pradesh","Delhi","Bihar","Jharkhand","Uttarakhand"],
+  east:["West Bengal","Odisha","Assam","Tripura","Manipur","Meghalaya","Nagaland","Mizoram","Arunachal Pradesh","Sikkim"],
+  central:["Rajasthan","Gujarat","Madhya Pradesh","Chhattisgarh"],
+  himalayan:["Himachal Pradesh"]
+};
+const STATE_ICON={
+  "Tamil Nadu":"🌴","Kerala":"🥥","Andhra Pradesh":"🌶️","Telangana":"🍲","Karnataka":"🫘",
+  "Goa":"🐟","Maharashtra":"🏙️","Punjab":"🌾","Haryana":"🥛","Uttar Pradesh":"🥘",
+  "Delhi":"🏛️","Bihar":"🐄","Jharkhand":"⛰️","Uttarakhand":"🏔️",
+  "West Bengal":"🐠","Odisha":"🌊","Assam":"🍵","Tripura":"🌿","Manipur":"🌺",
+  "Meghalaya":"☁️","Nagaland":"🦅","Mizoram":"🌄","Arunachal Pradesh":"🦋","Sikkim":"❄️",
+  "Rajasthan":"🏜️","Gujarat":"🫙","Madhya Pradesh":"🌳","Chhattisgarh":"🌾",
+  "Himachal Pradesh":"🏔️"
+};
+
+// Geolocation → state mapping via rough lat/lng bounds
+const GEO_STATE_MAP=[
+  {s:"Jammu & Kashmir",lat:[32,37],lng:[73,80]},
+  {s:"Himachal Pradesh",lat:[30,34],lng:[75,79]},
+  {s:"Punjab",lat:[29,33],lng:[73,77]},
+  {s:"Uttarakhand",lat:[28,31],lng:[77,81]},
+  {s:"Haryana",lat:[27,31],lng:[74,78]},
+  {s:"Delhi",lat:[28,29],lng:[76,78]},
+  {s:"Rajasthan",lat:[23,30],lng:[69,78]},
+  {s:"Uttar Pradesh",lat:[23,29],lng:[77,85]},
+  {s:"Bihar",lat:[24,28],lng:[83,89]},
+  {s:"Sikkim",lat:[27,28],lng:[88,89]},
+  {s:"Arunachal Pradesh",lat:[26,30],lng:[91,97]},
+  {s:"Nagaland",lat:[25,27],lng:[93,95]},
+  {s:"Manipur",lat:[23,26],lng:[92,95]},
+  {s:"Mizoram",lat:[21,24],lng:[92,94]},
+  {s:"Tripura",lat:[22,25],lng:[91,93]},
+  {s:"Meghalaya",lat:[25,27],lng:[89,93]},
+  {s:"Assam",lat:[24,28],lng:[89,97]},
+  {s:"West Bengal",lat:[21,28],lng:[85,90]},
+  {s:"Jharkhand",lat:[21,25],lng:[83,88]},
+  {s:"Odisha",lat:[17,23],lng:[81,87]},
+  {s:"Chhattisgarh",lat:[17,23],lng:[80,84]},
+  {s:"Madhya Pradesh",lat:[21,26],lng:[74,82]},
+  {s:"Gujarat",lat:[20,25],lng:[68,75]},
+  {s:"Maharashtra",lat:[15,22],lng:[72,81]},
+  {s:"Goa",lat:[14,16],lng:[73,75]},
+  {s:"Karnataka",lat:[11,18],lng:[74,79]},
+  {s:"Andhra Pradesh",lat:[12,20],lng:[76,85]},
+  {s:"Telangana",lat:[15,20],lng:[77,82]},
+  {s:"Tamil Nadu",lat:[8,13],lng:[76,81]},
+  {s:"Kerala",lat:[8,13],lng:[74,78]},
+];
+
+function latLngToState(lat,lng){
+  // Find best match — smallest containing box
+  let best=null,bestArea=Infinity;
+  for(const r of GEO_STATE_MAP){
+    if(lat>=r.lat[0]&&lat<=r.lat[1]&&lng>=r.lng[0]&&lng<=r.lng[1]){
+      const area=(r.lat[1]-r.lat[0])*(r.lng[1]-r.lng[0]);
+      if(area<bestArea){bestArea=area;best=r.s;}
+    }
+  }
+  return best;
+}
+
+function detectLocation(){
+  const btn=document.getElementById('detect-btn');
+  const status=document.getElementById('detect-status');
+  if(!navigator.geolocation){status.textContent='Geolocation not supported in this browser.';return;}
+  btn.disabled=true;btn.textContent='🔄 Detecting…';
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      const {latitude:lat,longitude:lng}=pos.coords;
+      const found=latLngToState(lat,lng);
+      btn.textContent='📍 Detect My Location';btn.disabled=false;
+      if(found&&STATES.includes(found)){
+        selectState(found);
+        status.innerHTML=`<span style="color:var(--mint);font-weight:600">✓ Detected: ${found}</span>`;
+        showToast('📍 Location detected: '+found);
+      } else {
+        status.textContent=`Could not map to a state (lat ${lat.toFixed(1)}, lng ${lng.toFixed(1)}). Please tap manually.`;
+      }
+    },
+    (err)=>{
+      btn.textContent='📍 Detect My Location';btn.disabled=false;
+      status.textContent='Location access denied. Please tap your state below.';
+    },
+    {timeout:8000,enableHighAccuracy:false}
+  );
+}
+
+let curZone='all';
+function filterZone(z,el){
+  curZone=z;
+  document.querySelectorAll('.zone-tab').forEach(t=>t.classList.remove('active'));
+  if(el)el.classList.add('active');
+  renderStates();
+}
+function renderStates(){
+  const pool=curZone==='all'?STATES:ZONE_MAP[curZone]||STATES;
+  document.getElementById('state-grid').innerHTML=pool.filter(s=>STATES.includes(s)).map(s=>`
+    <div class="state-card${selState===s?' selected':''}" onclick="selectState('${s}')">
+      <span class="state-flag">${STATE_ICON[s]||'🗺️'}</span>
+      <span>${s}</span>
+      ${selState===s?'<span style="margin-left:auto;font-size:.7rem">✓</span>':''}
+    </div>`).join('');
+}
+function selectState(s){
+  selState=s;
+  document.getElementById('state-next-btn').disabled=false;
+  renderStates();
+  // scroll into view if off screen
+  const el=document.querySelector('.state-card.selected');
+  if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'});
+  // update popular chips highlight
+  document.querySelectorAll('.pop-chip').forEach(c=>{
+    c.style.borderColor=c.textContent.includes(s)?'var(--saffron)':'';
+    c.style.color=c.textContent.includes(s)?'var(--saffron)':'';
+  });
+}
+function goToCluster(){if(!selState)return;selCluster=STATE_CLUSTER[selState]||'sc';renderClusters();showScreen('screen-cluster',2);}
+function selectDiet(d){
+  selDiet=d;
+  document.querySelectorAll('.diet-chip').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('diet-'+d).classList.add('selected');
+  showToast('Diet set to: '+d.charAt(0).toUpperCase()+d.slice(1));
+}
+function switchLang(l){
+  curLang=l;
+  document.getElementById('lang-en').classList.toggle('active',l==='en');
+  document.getElementById('lang-regional').classList.toggle('active',l==='regional');
+  applyLang();
+  renderView();
+}
+function applyLang(){
+  if(!selState||!STATE_LANG[selState])return;
+  const lb=STATE_LANG[selState].labels;
+  const isR=curLang==='regional';
+  // Update day card meal type labels
+  document.querySelectorAll('.meal-type').forEach(el=>{
+    const txt=el.textContent.trim().toLowerCase();
+    if(isR){
+      if(txt.includes('breakfast'))el.setAttribute('data-en','Breakfast');
+      if(txt.includes('lunch'))el.setAttribute('data-en','Lunch');
+      if(txt.includes('dinner'))el.setAttribute('data-en','Dinner');
+      if(txt.includes('snack'))el.setAttribute('data-en','Snack');
+    }
+  });
+}
+function getLbl(key){
+  if(curLang==='regional'&&selState&&STATE_LANG[selState]){
+    return STATE_LANG[selState].labels[key]||key;
+  }
+  const dflt={breakfast:'Breakfast',lunch:'Lunch',dinner:'Dinner',snack:'Evening Snack',fasting:'Fasting',grocery:'Grocery List',week:'Week',day:'Day',plan:'Plan'};
+  return dflt[key]||key;
+}
+
+// ═══════════ BUDGET ═══════════
+function setBudgetTier(t){
+  budgetTier=t;
+  document.querySelectorAll('.budget-tier').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bt-'+t).classList.add('active');
+  renderBudget();
+}
+function renderBudget(){
+  if(!planData.length)return;
+  const cl=selCluster||'sc';
+  const base=BUDGET_BASE[cl]||BUDGET_BASE['sc'];
+  const rates=base[budgetTier]||base['mid'];
+  const dietMod=DIET_BUDGET_MOD[selDiet]||1.0;
+  const fSize=parseInt(document.getElementById('family-size')?.value||3);
+  const month=document.getElementById('month-select')?.value||'March';
+  const year=parseInt(document.getElementById('year-select')?.value||2026);
+  const mIdx=["January","February","March","April","May","June","July","August","September","October","November","December"].indexOf(month);
+  const days=new Date(year,mIdx+1,0).getDate();
+
+  const eatoutDays=planData.filter(d=>d.isEatout).length;
+  const homeDays=days-eatoutDays;
+  const snackMod=opts.snacks?1:0;
+
+  // per-person per-day for home meals
+  const ppd=(rates.bf+rates.lu+rates.di+(rates.sn*snackMod))*dietMod;
+  const homeCost=ppd*homeDays*fSize;
+  const eatoutCost=eatoutDays*(budgetTier==='budget'?200:budgetTier==='mid'?400:700)*fSize;
+  const totalMonth=Math.round(homeCost+eatoutCost);
+  const ppdTotal=Math.round(totalMonth/days/fSize);
+
+  document.getElementById('b-monthly').textContent='₹'+totalMonth.toLocaleString('en-IN');
+  document.getElementById('b-perday').textContent='₹'+ppdTotal;
+  document.getElementById('b-family-note').textContent=`for ${fSize} person${fSize>1?'s':''}`;
+
+  // breakdown bars
+  const items=[
+    {l:'Breakfast',v:Math.round(rates.bf*dietMod*homeDays*fSize),c:'#F0A500'},
+    {l:'Lunch',v:Math.round(rates.lu*dietMod*homeDays*fSize),c:'#E8750A'},
+    {l:'Dinner',v:Math.round(rates.di*dietMod*homeDays*fSize),c:'#B5341E'},
+    {l:'Snacks',v:opts.snacks?Math.round(rates.sn*dietMod*homeDays*fSize):0,c:'#1A6A8A'},
+    {l:'Eat Out',v:eatoutCost,c:'#6B3FA0'},
+  ].filter(i=>i.v>0);
+  const maxV=Math.max(...items.map(i=>i.v));
+  document.getElementById('budget-breakdown').innerHTML=items.map(i=>`
+    <div class="budget-bar-row">
+      <span class="budget-bar-label">${i.l}</span>
+      <div class="budget-bar-track"><div class="budget-bar-fill" style="width:${Math.round(i.v/maxV*100)}%;background:${i.c}"></div></div>
+      <span class="budget-bar-amt">₹${(i.v/1000).toFixed(1)}k</span>
+    </div>`).join('');
+
+  // savings tip
+  const vegSavings=Math.round(totalMonth*(1-0.78));
+  const tips={nonveg:`Going vegetarian could save ~₹${vegSavings.toLocaleString('en-IN')}/mo`,veg:`Great choice! Veg diet saves ~20% vs non-veg`,eggetarian:`Eggs are the most budget-friendly protein source 🥚`,vegan:`Vegan saves on dairy — buy lentils & pulses in bulk`,jain:`Jain diet avoids root veg — plan around paneer & dal`,diabetic:`Low-GI meals reduce medical costs long-term 🩺`};
+  document.getElementById('budget-savings').textContent='💡 '+tips[selDiet];
+}
+
+// ═══════════ SEASON ═══════════
+function renderSeasonBanner(mIdx){
+  const banner=document.getElementById('season-banner');
+  let found=null;
+  for(const[k,s] of Object.entries(SEASONS)){if(s.months.includes(mIdx+1)){found=s;break;}}
+  if(found){banner.className=`season-banner ${found.cls}`;banner.innerHTML=`<span style="font-size:1.3rem">${found.icon}</span><span>${found.text}</span>`;banner.style.display='flex';}
+  else{banner.style.display='none';}
+}
+
+// ═══════════ NUTRITION SUMMARY ═══════════
+function renderNutriSummary(){
+  const week=planData.slice(curWeek*7,curWeek*7+7);
+  const counts={protein:0,greens:0,grain:0,dairy:0};
+  let total=0;
+  week.forEach(d=>{(d.nut||[]).forEach(n=>{if(counts[n]!==undefined){counts[n]++;total++;}});});
+  const colors={protein:'#B5341E',greens:'#1E6B45',grain:'#F0A500',dairy:'#5C3D2E'};
+  const labels2={protein:'🥚 Protein',greens:'🥬 Greens',grain:'🌾 Grains',dairy:'🥛 Dairy'};
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('nutri-bars').innerHTML=sorted.map(([k,v])=>{
+    const pct=total?Math.round(v/total*100):0;
+    return`<div class="nutri-bar-row">
+      <span class="nutri-bar-lbl">${labels2[k]}</span>
+      <div class="nutri-bar-track"><div class="nutri-bar-fill" style="width:${pct}%;background:${colors[k]}"></div></div>
+      <span class="nutri-bar-pct">${pct}%</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════ PREP TIME ═══════════
+function getPrepBadge(meal){
+  if(!meal||!meal.m)return'';
+  const key=Object.keys(PREP_TIME).find(k=>meal.m.toLowerCase().includes(k.toLowerCase()));
+  const p=key?PREP_TIME[key]:'medium';
+  const info=PREP_LABELS[p];
+  return`<div class="prep-badge ${info.cls}">${info.t}</div>`;
+}
+
+// ═══════════ REPEAT DETECTION ═══════════
+function getRepeatWarning(meal,idx,key){
+  if(!meal||!meal.m)return'';
+  const window5=[];
+  for(let i=Math.max(0,idx-4);i<idx;i++){
+    const d=planData[i];if(!d)continue;
+    const m=swaps[`${i}-${key}`]||(key==='bf'?d.bf:key==='lu'?d.lu:d.di);
+    if(m)window5.push(m.m);
+  }
+  if(window5.includes(meal.m))return`<div class="repeat-warn">↻ Repeated recently</div>`;
+  return'';
+}
+window.onload=()=>{renderStates();renderPersons();}
+
+function renderClusters(){
+  const home=STATE_CLUSTER[selState]||'sc';
+  document.getElementById('cluster-title').textContent=`Refine cuisine for ${selState}`;
+  document.getElementById('cluster-sub').textContent=`${selState} belongs to the ${CLUSTERS[home].name} tradition. Stay authentic or explore a neighbouring style.`;
+  const ord=[home,...Object.keys(CLUSTERS).filter(k=>k!==home)];
+  document.getElementById('cluster-grid').innerHTML=ord.map(k=>{const c=CLUSTERS[k];const ih=k===home;return`<div class="cluster-card${selCluster===k?' selected':''}" style="--gradient:${c.gradient}" onclick="pickCluster('${k}',this)"><div class="cluster-icon">${c.icon}</div><div class="cluster-name">${c.name}${ih?' <span style="font-size:.62rem;color:var(--mint)">✓ Your region</span>':''}</div><div class="cluster-states" style="margin-bottom:.2rem">${c.states}</div><div class="cluster-states" style="font-style:italic">${c.desc}</div></div>`;}).join('');
+}
+function pickCluster(k,el){selCluster=k;document.querySelectorAll('.cluster-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected');}
+
+// PERSONS
+function renderPersons(){
+  document.getElementById('persons-list').innerHTML=persons.map((p,i)=>`
+    <div class="person-row">
+      <input class="fi" placeholder="Name" value="${p.name}" oninput="persons[${i}].name=this.value">
+      <input class="fi" placeholder="e.g. vegetarian, no fish, diabetic" value="${p.restriction}" oninput="persons[${i}].restriction=this.value">
+      <input class="fi fi-date" type="date" value="${p.birthday}" oninput="persons[${i}].birthday=this.value" title="Birthday">
+      <select class="fi" oninput="persons[${i}].role=this.value"><option${p.role==='Adult'?' selected':''}>Adult</option><option${p.role==='Child'?' selected':''}>Child</option><option${p.role==='Elder'?' selected':''}>Elder</option></select>
+      ${persons.length>1?`<button class="remove-btn" onclick="removePerson(${i})">×</button>`:'<div style="width:28px"></div>'}
+    </div>`).join('');
+}
+function addPerson(){persons.push({name:"",restriction:"",birthday:"",role:"Adult"});renderPersons();}
+function removePerson(i){persons.splice(i,1);renderPersons();}
+
+// PETS
+function renderPets(){
+  const hasPets=pets.length>0;
+  document.getElementById('pets-empty').style.display=hasPets?'none':'block';
+  document.getElementById('pet-col-headers').style.display=hasPets?'grid':'none';
+  document.getElementById('pets-list').innerHTML=pets.map((p,i)=>`
+    <div class="pet-row">
+      <select class="pet-type-select" onchange="pets[${i}].type=this.value">
+        ${['dog','cat','cow','goat','parrot','pigeon'].map(t=>`<option value="${t}"${p.type===t?' selected':''}>${PET_MEALS[t].name}</option>`).join('')}
+      </select>
+      <input class="fi" placeholder="Pet name" value="${p.name}" oninput="pets[${i}].name=this.value">
+      <input class="fi" placeholder="Notes (e.g. senior, diabetic)" value="${p.notes}" oninput="pets[${i}].notes=this.value">
+      <button class="remove-btn" onclick="removePet(${i})">×</button>
+    </div>`).join('');
+}
+function addPet(){pets.push({type:'dog',name:'',notes:''});renderPets();}
+function removePet(i){pets.splice(i,1);renderPets();}
+
+// OPTIONS
+function toggleOpt(k){opts[k]=!opts[k];document.getElementById(`opt-${k}`).classList.toggle('active',opts[k]);document.getElementById(`chk-${k}`).textContent=opts[k]?'✓':'';}
+function setFreq(f){eatFreq=f;document.querySelectorAll('.freq-btn').forEach(b=>b.classList.remove('active'));document.getElementById(`freq-${f}`).classList.add('active');}
+
+// ═══════════ GENERATE ═══════════
+function generatePlan(){
+  const btn=document.getElementById('gen-btn');
+  btn.innerHTML='<span class="spinner"></span>Building your Thali…';btn.disabled=true;
+  setTimeout(()=>{
+    eatPref=document.getElementById('eatout-pref').value||'';
+    const month=document.getElementById('month-select').value;
+    const year=parseInt(document.getElementById('year-select').value);
+    const mIdx=MN.indexOf(month);
+    const days=new Date(year,mIdx+1,0).getDate();
+    const cl=selCluster||'sc';
+    const db=MEALS[cl]||MEALS['sc'];
+    const festivals=FESTIVALS[mIdx+1]||[];
+    const fMap={};festivals.forEach(f=>{fMap[f.d]=f;});
+
+    // fasting days
+    const fastSet=new Set();
+    for(let d=1;d<=days;d++){const dt=new Date(year,mIdx,d);if(opts.fasting&&(dt.getDay()===5||d===11||d===26))fastSet.add(d);}
+
+    // eat out days
+    const eatoutSet=new Set();
+    if(eatFreq!=='never'){
+      const dowList=EATOUT_OPTIONS[eatFreq]||[];
+      for(let d=1;d<=days;d++){const dt=new Date(year,mIdx,d);if(dowList.includes(dt.getDay()))eatoutSet.add(d);}
+    }
+
+    // birthday map
+    const bdayMap={};
+    persons.forEach(p=>{
+      if(p.birthday){
+        const bd=new Date(p.birthday);
+        if(bd.getMonth()===mIdx){bdayMap[bd.getDate()]=(bdayMap[bd.getDate()]||[]);bdayMap[bd.getDate()].push(p.name||'Someone');}
+      }
+    });
+
+    planData=[];
+    let bI=0,lI=0,dI=0,sI=0,eoI=0,petI=0;
+
+    // Diet meal filter helper — defined OUTSIDE loop to avoid redeclaration error
+    function fmPick(arr,idx){
+      const fn=DIET_FILTER[selDiet]||DIET_FILTER.nonveg;
+      const filtered=arr.filter(fn);
+      const pool=filtered.length>0?filtered:arr;
+      return pool[idx%pool.length];
+    }
+
+    for(let day=1;day<=days;day++){
+      const date=new Date(year,mIdx,day);
+      const dayName=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][date.getDay()];
+      const isFast=fastSet.has(day);
+      const isEatout=eatoutSet.has(day);
+      const fest=opts.festival?fMap[day]:null;
+      const bdayPeople=bdayMap[day]||[];
+
+      let bf,lu,di,sn=null;
+      if(isEatout){
+        const dish=eatPref?`${eatPref} (${EATOUT_DISHES_DEFAULT[eoI%EATOUT_DISHES_DEFAULT.length]})`:EATOUT_DISHES_DEFAULT[eoI%EATOUT_DISHES_DEFAULT.length];
+        const isOrder=[1,2,3,4,5].includes(date.getDay());
+        bf=fmPick(db.breakfast,bI);
+        lu={m:dish,s:isOrder?'🛵 Order Online':'🍴 Eat Out',t:["protein","grain"],isEatout:true,isOrder};
+        di={m:"Light dinner / leftovers",s:"Rest day — keep it simple",t:["grain"],isEatout:true};
+        eoI++;
+      } else if(isFast){
+        const fl=db.fasting||[{m:"Fruits + Milk",s:"",t:["dairy","greens"]}];
+        bf=fl[bI%fl.length];lu=fl[(bI+1)%fl.length];di=fl[(bI+2)%fl.length];
+      } else {
+        bf=fmPick(db.breakfast,bI);
+        lu=fmPick(db.lunch,lI);
+        di=fmPick(db.dinner,dI);
+      }
+      if(fest&&!isEatout){lu={m:fest.meals[0],s:fest.meals.slice(1).join(' · '),t:["grain","dairy","protein"]};}
+      if(opts.snacks&&db.snack){sn=fmPick(db.snack,sI);sI++;}
+
+      // person variants
+      const variants=persons.filter(p=>p.name||p.restriction).map(p=>{
+        let alt=null;
+        if(p.restriction){
+          const r=p.restriction.toLowerCase();
+          const lm=lu.m.toLowerCase();
+          const isNV=lm.includes('chicken')||lm.includes('fish')||lm.includes('mutton')||lm.includes('prawn')||lm.includes('meat');
+          if((r.includes('veg')&&!r.includes('non'))&&isNV)alt=VEG_ALTS[lI%VEG_ALTS.length];
+          else if(r.includes('no fish')&&lm.includes('fish'))alt='Chicken / Paneer alternative';
+          else if(r.includes('no egg')&&lm.includes('egg'))alt='Paneer Bhurji';
+          else if(r.includes('diabetic')||r.includes('diet'))alt='Less rice · extra dal & vegetables';
+          else if(r.includes('no meat')&&isNV)alt=VEG_ALTS[lI%VEG_ALTS.length];
+        }
+        return{name:p.name||'Person',alt};
+      }).filter(v=>v.alt);
+
+      // pet meals
+      const petMeals=[];
+      if(opts.petmeal&&pets.length>0){
+        pets.forEach(pt=>{const pm=PET_MEALS[pt.type];if(pm){petMeals.push({pet:`${pt.name||pt.type}`,meal:pm.meals[petI%pm.meals.length]});}});
+        petI++;
+      }
+
+      // birthday
+      const isBday=bdayPeople.length>0;
+      const hyd=opts.hydration&&([4,5,6,7].includes(mIdx+1))?HYDRATION[day%HYDRATION.length]:null;
+      const leftoverTip=opts.leftover&&day>1?`♻️ Use yesterday's ${planData[day-2]?.lu?.m||'curry'} for quick dinner`:'';
+
+      planData.push({day,dayName,date,bf,lu,sn,di,variants,fest,isFast,isEatout,isBday,bdayPeople,petMeals,hyd,leftoverTip,nut:NUTRI_ROT[(day-1)%NUTRI_ROT.length]});
+      if(!isFast&&!isEatout){bI+=day%3===0?2:1;lI+=day%4===0?2:1;dI+=day%2===0?2:1;}else bI++;
+    }
+    totWeeks=Math.ceil(days/7);curWeek=0;
+
+    // badges
+    const named=persons.filter(p=>p.name);
+    const cl2=CLUSTERS[cl];
+    // Show language bar if state has regional language
+    const langInfo=STATE_LANG[selState];
+    const langBar=document.getElementById('lang-bar');
+    if(langInfo){
+      langBar.style.display='flex';
+      document.getElementById('lang-regional-name').textContent=langInfo.name;
+    } else {
+      langBar.style.display='none';
+    }
+    // Diet badge
+    const dietLabels={nonveg:'🍗 Non-Veg',veg:'🥦 Vegetarian',eggetarian:'🥚 Eggetarian',vegan:'🌱 Vegan',jain:'🪷 Jain',diabetic:'🩺 Diabetic-Friendly'};
+    document.getElementById('plan-badges').innerHTML=`
+      <span class="info-badge">${cl2.icon} ${cl2.name}</span>
+      <span class="info-badge">📍 ${selState}</span>
+      <span class="info-badge">📅 ${month} ${year}</span>
+      <span class="info-badge">${days} days</span>
+      ${named.map(p=>`<span class="info-badge">👤 ${p.name}${p.restriction?' · '+p.restriction:''}</span>`).join('')}
+      <span class="info-badge">${dietLabels[selDiet]}</span>
+      ${pets.map(p=>`<span class="info-badge violet">🐾 ${p.name||p.type}</span>`).join('')}
+      ${eatFreq!=='never'?`<span class="info-badge blue">🍴 Eat out: ${eatFreq}</span>`:''}
+      ${opts.fasting?'<span class="info-badge green">🌿 Fasting</span>':''}
+      ${opts.festival?'<span class="info-badge green">🎊 Festivals</span>':''}
+      ${opts.snacks?'<span class="info-badge green">☕ Snacks</span>':''}`;
+
+    // legend
+    const legends=[];
+    if(eatFreq!=='never')legends.push(`<span class="legend-item"><span class="legend-dot" style="background:var(--sky)"></span>Eat out / Order</span>`);
+    if(opts.festival)legends.push(`<span class="legend-item"><span class="legend-dot" style="background:var(--turmeric)"></span>Festival</span>`);
+    if(opts.fasting)legends.push(`<span class="legend-item"><span class="legend-dot" style="background:var(--mint)"></span>Fasting</span>`);
+    const hasBdays=Object.keys(bdayMap).length>0;
+    if(hasBdays)legends.push(`<span class="legend-item"><span class="legend-dot" style="background:var(--violet)"></span>Birthday</span>`);
+    document.getElementById('legend-row').innerHTML=legends.join('');
+
+    renderView();renderGrocery();renderBudget();
+    const mIdxSeason=["January","February","March","April","May","June","July","August","September","October","November","December"].indexOf(month);
+    renderSeasonBanner(mIdxSeason);
+    showScreen('screen-plan',5);
+    btn.innerHTML='✨ Generate My Thali Plan';btn.disabled=false;
+  },700);
+}
+
+// ═══════════ VIEWS ═══════════
+function switchView(v){curView=v;document.getElementById('vbtn-week').classList.toggle('active',v==='week');document.getElementById('vbtn-month').classList.toggle('active',v==='month');document.getElementById('week-view').style.display=v==='week'?'block':'none';document.getElementById('month-view').style.display=v==='month'?'block':'none';document.getElementById('prev-btn').disabled=v==='month'||curWeek===0;document.getElementById('next-btn').disabled=v==='month'||(curWeek>=totWeeks-1);renderView();updateLabel();}
+function navigate(dir){if(curView!=='week')return;curWeek=Math.max(0,Math.min(totWeeks-1,curWeek+dir));document.getElementById('prev-btn').disabled=curWeek===0;document.getElementById('next-btn').disabled=curWeek>=totWeeks-1;renderView();updateLabel();renderGrocery();renderBudget();}
+function renderView(){if(curView==='week')renderWeek();else renderMonth();updateLabel();renderNutriSummary();}
+function updateLabel(){document.getElementById('view-label').textContent=curView==='week'?`${getLbl('week')} ${curWeek+1} of ${totWeeks}`:planData[0]?MN[planData[0].date.getMonth()]+' '+planData[0].date.getFullYear():'';}
+
+function renderWeek(){
+  const start=curWeek*7,wd=planData.slice(start,start+7);
+  const MOS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  document.getElementById('week-view').innerHTML=wd.map((d,wi)=>{
+    const idx=start+wi;
+    const bf=swaps[`${idx}-bf`]||d.bf,lu=swaps[`${idx}-lu`]||d.lu,di=swaps[`${idx}-di`]||d.di,sn=swaps[`${idx}-sn`]||d.sn;
+    const hasSn=opts.snacks&&sn;
+    const cols=hasSn?4:3;
+    const extraClass=d.isBday?' birthday-day':d.isEatout?' eatout-day':'';
+    return`<div class="day-card${extraClass}">
+      <div class="day-header">
+        <span class="day-name">${d.dayName}</span>
+        <div class="day-meta">
+          ${d.fest?`<span class="tag festival">🎊 ${d.fest.n}</span>`:''}
+          ${d.isFast?'<span class="tag fasting">🌿 Fast</span>':''}
+          ${d.isBday?`<span class="tag birthday">🎂 ${d.bdayPeople.join(' & ')}</span>`:''}
+          ${d.isEatout?`<span class="tag ${lu.isOrder?'order':'eatout'}">${lu.isOrder?'🛵 Order':'🍴 Eat Out'}</span>`:''}
+          <span class="day-date">${MOS[d.date.getMonth()]} ${d.day}</span>
+        </div>
+      </div>
+      <div class="meals-grid" style="grid-template-columns:repeat(${cols},1fr)">
+        ${mCell(bf,'breakfast',idx,'Breakfast')}
+        ${lu.isEatout?eatoutCell(lu,idx):(hasSn?[mCell(lu,'lunch',idx,'Lunch'),mCell(sn,'snack',idx,'Snack'),mCell(di,'dinner',idx,'Dinner')]:[mCell(lu,'lunch',idx,'Lunch'),mCell(di,'dinner',idx,'Dinner')]).join('')}
+      </div>
+      ${d.variants.length?`<div class="person-variants">${d.variants.map(v=>`<div class="person-variant"><span class="person-tag">${v.name}:</span>${v.alt}</div>`).join('')}</div>`:''}
+      ${d.isBday?`<div class="birthday-strip"><span class="bday-text">🎂 Happy Birthday ${d.bdayPeople.join(' & ')}!</span><span class="bday-suggestion">${BIRTHDAY_SPECIALS[d.day%BIRTHDAY_SPECIALS.length]}</span></div>`:''}
+      ${d.petMeals.length?`<div class="pet-strip">${d.petMeals.map(pm=>`<span class="pet-meal-badge">🐾 ${pm.pet}: ${pm.meal}</span>`).join('')}</div>`:''}
+      <div class="nutrition-row">
+        ${d.isEatout?'<span class="nutri-badge" style="background:rgba(26,106,138,0.09);color:var(--sky)">🍴 Dining Out</span>':(d.nut||[]).map(n=>`<span class="nutri-badge ${n}">${NUTRI_LABELS[n]}</span>`).join('')}
+        ${d.hyd?`<span class="hydration-badge">💧 ${d.hyd}</span>`:''}
+        ${d.leftoverTip?`<span style="font-size:.63rem;color:var(--mint);font-weight:500">${d.leftoverTip}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function mCell(meal,type,idx,labelKey){
+  const label=getLbl(labelKey.toLowerCase())||labelKey;
+  const keyMap={Breakfast:'bf',Lunch:'lu',Dinner:'di',Snack:'sn'};
+  const key=keyMap[labelKey]||'bf';
+  return`<div class="meal-cell">
+    <button class="swap-btn" onclick="openModal(${idx})" title="Swap">↻</button>
+    <div class="meal-type"><span class="meal-dot ${type}"></span>${label}</div>
+    <div class="meal-main">${meal.m}</div>
+    ${meal.s?`<div class="meal-side">${meal.s}</div>`:''}
+    ${getPrepBadge(meal)}
+    ${getRepeatWarning(meal,idx,key)}
+  </div>`;
+}
+function eatoutCell(lu,idx){
+  return`<div class="meal-cell eatout-cell" style="grid-column:span 2">
+    <div class="meal-type"><span class="meal-dot eatout"></span>${getLbl('lunch')} + ${getLbl('dinner')}</div>
+    <div class="eatout-badge">${lu.isOrder?'🛵 Ordering Online':'🍴 Eating Out'}</div>
+    <div class="meal-main">${lu.m}</div>
+    ${lu.s?`<div class="meal-side">${lu.s}</div>`:''}
+  </div>`;
+}
+
+function renderMonth(){
+  const DOWS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const MOS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const firstDow=planData[0]?.date.getDay()||0;
+  let h=`<div class="month-grid">${DOWS.map(d=>`<div class="month-day-hdr">${d}</div>`).join('')}</div><div class="month-grid">`;
+  for(let e=0;e<firstDow;e++)h+=`<div class="month-cell empty"></div>`;
+  planData.forEach((d,i)=>{
+    const bf=swaps[`${i}-bf`]||d.bf,lu=swaps[`${i}-lu`]||d.lu;
+    const extraCls=d.isBday?' bday-cell':d.isEatout?' eatout-cell-m':'';
+    h+=`<div class="month-cell${extraCls}" onclick="openModal(${i})">
+      <div class="month-num">
+        <span>${d.day}</span>
+        <div class="month-dots">
+          ${d.fest?'<span class="mdot fest"></span>':''}
+          ${d.isBday?'<span class="mdot bday"></span>':''}
+          ${d.isEatout?'<span class="mdot eatout"></span>':''}
+          ${d.isFast?'<span class="mdot fast"></span>':''}
+        </div>
+      </div>
+      <div class="month-meal-mini"><span class="mb">${d.isEatout?'🍴 Out':('☀ '+bf.m)}</span><span>${lu.m}</span></div>
+      ${d.isFast?'<div class="month-fasting-bar"></div>':''}
+      ${d.isBday?'<div class="month-bday-bar"></div>':''}
+    </div>`;
+  });
+  h+='</div>';
+  document.getElementById('month-view').innerHTML=h;
+}
+
+// ═══════════ MODAL ═══════════
+function openModal(idx){
+  const d=planData[idx];
+  const bf=swaps[`${idx}-bf`]||d.bf,lu=swaps[`${idx}-lu`]||d.lu,di=swaps[`${idx}-di`]||d.di,sn=opts.snacks?(swaps[`${idx}-sn`]||d.sn):null;
+  document.getElementById('modal-title').textContent=`${d.dayName}, ${MN[d.date.getMonth()]} ${d.day}${d.fest?' 🎊 '+d.fest.n:''}${d.isFast?' 🌿 Fasting':''}${d.isBday?' 🎂 Birthday':''}`;
+  document.getElementById('modal-body').innerHTML=`
+    ${mSec(bf,'Breakfast','bf',idx)}
+    ${d.isEatout?`<div class="modal-meal-sec"><div class="modal-meal-type">🍴 Lunch + Dinner</div><div class="modal-meal-name">${lu.m}</div><div class="modal-meal-side">${lu.isOrder?'Ordering online':'Eating out'} — enjoy!</div></div>`:
+      mSec(lu,'Lunch','lu',idx)+''+(sn?mSec(sn,'Evening Snack','sn',idx):'')+mSec(di,'Dinner','di',idx)}
+    ${d.variants.length?`<div style="margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--border)"><div style="font-size:.68rem;font-weight:600;text-transform:uppercase;color:var(--cardamom);margin-bottom:.4rem">Personal Alternatives</div>${d.variants.map(v=>`<div style="font-size:.82rem;padding:.18rem 0;color:var(--cardamom)"><span style="font-weight:600;color:var(--saffron)">${v.name}:</span> ${v.alt}</div>`).join('')}</div>`:''}
+    ${d.isBday?`<div style="margin-top:.8rem;padding:.65rem .8rem;background:rgba(107,63,160,0.07);border-radius:8px;border:1px solid rgba(107,63,160,0.18)"><div style="font-size:.78rem;font-weight:700;color:var(--violet);margin-bottom:.2rem">🎂 Birthday — ${d.bdayPeople.join(' & ')}</div><div style="font-size:.78rem;color:var(--cardamom)">${BIRTHDAY_SPECIALS[d.day%BIRTHDAY_SPECIALS.length]}</div></div>`:''}
+    ${d.petMeals.length?`<div style="margin-top:.8rem;padding:.6rem .8rem;background:rgba(107,63,160,0.05);border-radius:8px"><div style="font-size:.68rem;font-weight:600;text-transform:uppercase;color:var(--violet);margin-bottom:.4rem">🐾 Pet Meals</div>${d.petMeals.map(pm=>`<div style="font-size:.8rem;color:var(--cardamom);padding:.15rem 0"><span style="font-weight:600">${pm.pet}:</span> ${pm.meal}</div>`).join('')}</div>`:''}
+    ${d.hyd?`<div style="margin-top:.8rem;padding:.5rem .75rem;background:rgba(26,106,138,0.08);border-radius:7px;font-size:.78rem;color:var(--sky)">💧 Hydration tip: ${d.hyd}</div>`:''}`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function mSec(meal,label,key,idx){
+  const cl=selCluster||'sc';const db=MEALS[cl];
+  const km={bf:'breakfast',lu:'lunch',di:'dinner',sn:'snack'};
+  const pool=(db[km[key]]||db.breakfast).slice(0,8);
+  const lbl=getLbl(km[key])||label;
+  const rid=`rec-${idx}-${key}`;
+  const recipe=RECIPES[meal.m]||(()=>{
+    // fuzzy match — try partial name
+    const k=Object.keys(RECIPES).find(r=>meal.m.toLowerCase().includes(r.toLowerCase())||r.toLowerCase().includes(meal.m.toLowerCase().split(' ')[0]));
+    return k?RECIPES[k]:null;
+  })();
+  const recipeHtml=recipe?`
+    <div class="recipe-section-hdr">🛒 Ingredients</div>
+    <div class="recipe-ingredients">${recipe.ing.map(i=>`<div class="recipe-ing"><span class="recipe-ing-amt">${i.a}</span><span>${i.n}</span></div>`).join('')}</div>
+    <div class="recipe-section-hdr">👩‍🍳 Method</div>
+    <div class="recipe-steps">${recipe.steps.map(s=>`<div class="recipe-step">${s}</div>`).join('')}</div>
+    ${recipe.tip?`<div class="recipe-tip">💡 Chef's tip: ${recipe.tip}</div>`:''}
+  `:`<div class="recipe-no-data">Recipe coming soon for this dish.<br><span style="font-size:.68rem">Try searching "How to make ${meal.m}" for a detailed guide.</span></div>`;
+  return`<div class="modal-meal-sec">
+    <div class="modal-meal-type"><span class="meal-dot ${km[key]}" style="width:6px;height:6px"></span>${lbl}</div>
+    <div class="modal-meal-name">${meal.m}</div>
+    ${meal.s?`<div class="modal-meal-side">${meal.s}</div>`:''}
+    <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.45rem">
+      <button class="show-swap" onclick="toggleSwap(this)">↻ Swap this meal</button>
+    </div>
+    <div class="swap-opts" style="display:none">${pool.map((m,i)=>`<div class="swap-opt" onclick="doSwap(${idx},'${key}',${i})">${m.m}</div>`).join('')}</div>
+    <button class="recipe-toggle" id="rtbtn-${rid}" onclick="toggleRecipe('${rid}')">📖 How to Make</button>
+    <div class="recipe-box" id="rbox-${rid}">${recipeHtml}</div>
+  </div>`;
+}
+function toggleRecipe(rid){
+  const box=document.getElementById('rbox-'+rid);
+  const btn=document.getElementById('rtbtn-'+rid);
+  const open=box.classList.toggle('open');
+  btn.classList.toggle('open',open);
+  btn.textContent=open?'✕ Hide Recipe':'📖 How to Make';
+}
+function toggleSwap(btn){const el=btn.parentElement.nextElementSibling;const show=el.style.display==='none';el.style.display=show?'grid':'none';btn.textContent=show?'✕ Cancel':'↻ Swap this meal';}
+function doSwap(idx,key,mIdx){const cl=selCluster||'sc';const db=MEALS[cl];const km={bf:'breakfast',lu:'lunch',di:'dinner',sn:'snack'};const pool=db[km[key]]||db.breakfast;swaps[`${idx}-${key}`]=pool[mIdx%pool.length];closeModalDirect();renderView();showToast('✅ Meal swapped!');}
+function closeModal(e){if(e.target.id==='modal-overlay')closeModalDirect();}
+function closeModalDirect(){document.getElementById('modal-overlay').classList.remove('open');}
+
+// ═══════════ GROCERY ═══════════
+function switchGTab(t){curGTab=t;document.getElementById('gtab-family').classList.toggle('active',t==='family');document.getElementById('gtab-pet').classList.toggle('active',t==='pet');renderGrocery();}
+function renderGrocery(){
+  if(curGTab==='pet'){renderPetGrocery();return;}
+  const cl=selCluster||'sc';const tmpl=GROCERY_DATA[cl]||GROCERY_DATA['sc'];
+  const fSize=parseInt(document.getElementById('family-size')?.value||3);
+  const scaleNote=fSize>4?' <span style="color:var(--saffron);font-size:.6rem">(scale ×1.5)</span>':'';
+  let html='',i=0;
+  for(const[cat,items] of Object.entries(tmpl)){
+    html+=`<div class="grocery-cat"><div class="grocery-cat-name">${cat}${scaleNote}</div>`;
+    items.forEach(it=>{const id=`g${i++}`;const ck=checks.has(id);
+      html+=`<div class="grocery-item${ck?' checked':''}" onclick="toggleCheck('${id}',this)"><div class="grocery-checkbox">${ck?'✓':''}</div><span class="grocery-item-name">${it.n}</span><span class="grocery-qty">${it.q}</span></div>`;
+    });html+='</div>';
+  }
+  document.getElementById('grocery-body').innerHTML=html;
+  document.getElementById('shopping-tip').textContent=SHOPPING_TIPS[cl];
+  document.getElementById('grocery-scope').textContent=curView==='month'?'Full Month':`${getLbl('week')} ${curWeek+1}`;
+}
+function renderPetGrocery(){
+  if(pets.length===0){document.getElementById('grocery-body').innerHTML='<div style="font-size:.82rem;color:var(--cardamom);padding:.5rem 0">No pets added. Go back to Household step to add pets.</div>';document.getElementById('shopping-tip').textContent='Add pets in the Household step to see their grocery list here.';return;}
+  let html='',i=100;
+  pets.forEach(p=>{
+    const pg=PET_GROCERY[p.type];if(!pg)return;
+    const label=p.name||PET_MEALS[p.type].name;
+    for(const[cat,items] of Object.entries(pg)){
+      html+=`<div class="grocery-cat"><div class="grocery-cat-name">${label} — ${cat}</div>`;
+      items.forEach(it=>{const id=`g${i++}`;const ck=checks.has(id);
+        html+=`<div class="grocery-item${ck?' checked':''}" onclick="toggleCheck('${id}',this)"><div class="grocery-checkbox">${ck?'✓':''}</div><span class="grocery-item-name">${it.n}</span><span class="grocery-qty">${it.q}</span></div>`;
+      });html+='</div>';
+    }
+    html+=`<div style="font-size:.72rem;color:var(--violet);background:rgba(107,63,160,0.06);padding:.5rem .6rem;border-radius:6px;margin-bottom:.8rem;line-height:1.5">⚠️ ${PET_MEALS[p.type].tips}</div>`;
+  });
+  document.getElementById('grocery-body').innerHTML=html;
+  document.getElementById('shopping-tip').textContent='Always consult your vet for specific dietary needs. Home-cooked pet food should be prepared without salt, onion, or garlic.';
+}
+function toggleCheck(id,el){if(checks.has(id)){checks.delete(id);el.classList.remove('checked');el.querySelector('.grocery-checkbox').textContent='';}else{checks.add(id);el.classList.add('checked');el.querySelector('.grocery-checkbox').textContent='✓';}}
+function resetChecks(){checks.clear();renderGrocery();showToast('✅ Checklist reset');}
+function copyGrocery(){
+  const cl=selCluster||'sc';const tmpl=GROCERY_DATA[cl];
+  const month=document.getElementById('month-select').value,year=document.getElementById('year-select').value;
+  let txt=`🛒 GROCERY LIST — ${CLUSTERS[cl].name} Cuisine\n📅 ${month} ${year}\n\n`;
+  for(const[cat,items] of Object.entries(tmpl)){txt+=`${cat.toUpperCase()}\n`;items.forEach(i=>{txt+=`  • ${i.n} — ${i.q}\n`;});txt+='\n';}
+  if(pets.length){txt+='\n🐾 PET GROCERY\n';pets.forEach(p=>{const pg=PET_GROCERY[p.type];if(pg)for(const[,items] of Object.entries(pg)){items.forEach(i=>{txt+=`  • ${i.n} — ${i.q}\n`;});}});}
+  txt+=`\n💡 Tip: ${SHOPPING_TIPS[cl]}\n\nThali — Indian Meal Planner`;
+  navigator.clipboard.writeText(txt).then(()=>showToast('✅ Copied!')).catch(()=>showToast('⚠️ Try selecting manually'));
+}
+function shareWA(){
+  const cl=selCluster||'sc';const tmpl=GROCERY_DATA[cl];
+  const month=document.getElementById('month-select').value;
+  let txt=`🛒 *Grocery List — ${month}*\n_(${CLUSTERS[cl].name} Cuisine)_\n\n`;
+  for(const[cat,items] of Object.entries(tmpl)){txt+=`*${cat}*\n`;items.forEach(i=>{txt+=`• ${i.n} — ${i.q}\n`;});txt+='\n';}
+  if(pets.length){txt+=`\n*🐾 Pet Food*\n`;pets.forEach(p=>{const pg=PET_GROCERY[p.type];if(pg)for(const[,items] of Object.entries(pg)){items.forEach(i=>{txt+=`• ${i.n} — ${i.q}\n`;});}});}
+  txt+=`\n💡 ${SHOPPING_TIPS[cl]}`;
+  window.open(`https://wa.me/?text=${encodeURIComponent(txt)}`,'_blank');
+}
+
+// ═══════════ NAV ═══════════
+function showScreen(id,n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.step').forEach((s,i)=>{s.classList.remove('active','done');if(i+1<n)s.classList.add('done');else if(i+1===n)s.classList.add('active');});
+}
+function jumpStep(n){const screens=['screen-state','screen-cluster','screen-persons','screen-prefs','screen-plan'];const el=document.getElementById(`step${n}`);if(el.classList.contains('done')||el.classList.contains('active'))showScreen(screens[n-1],n);}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
+</body>
+</html>
